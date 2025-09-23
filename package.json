@@ -16,12 +16,27 @@
     "db:push": "turbo -F server db:push",
     "db:studio": "turbo -F server db:studio",
     "db:generate": "turbo -F server db:generate",
-    "db:migrate": "turbo -F server db:migrate"
+    "db:migrate": "turbo -F server db:migrate",
+    "prepare": "husky",
+    "format": "prettier --write .",
+    "check-format": "prettier --check ."
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md,scss}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "postgres": "^3.4.7"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.0",
+    "prettier": "^3.6.2",
     "turbo": "^2.5.4"
   },
   "packageManager": "npm@10.9.3"
