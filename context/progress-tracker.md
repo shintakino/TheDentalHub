@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 02: TBD
+- Feature 02: Navigation Layout (Sidebar & Navbar)
 
 ## Current Goal
 
-- Define the immediate implemetation goal here.
+- Implement a high-end, production-ready floating sidebar and navbar component.
 
 ## Completed
 
@@ -16,6 +16,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Defining Design System components spec.
 - [x] Configuring shadcn/ui and base layout.
 - [x] Implementing Design System components (01-design-system.md)
+- [x] Feature 02: Navigation Layout (Sidebar & Navbar)
 
 ## In Progress
 
@@ -23,7 +24,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 02: TBD
+- Feature 03: TBD
 
 ## Open Questions
 
