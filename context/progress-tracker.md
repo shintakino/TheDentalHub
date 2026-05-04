@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 02: Navigation Layout (Sidebar & Navbar)
+- Feature 03: Auth
 
 ## Current Goal
 
-- Implement a high-end, production-ready floating sidebar and navbar component.
+- Implement Feature 03 (Auth) using Clerk
 
 ## Completed
 
@@ -16,7 +16,8 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Defining Design System components spec.
 - [x] Configuring shadcn/ui and base layout.
 - [x] Implementing Design System components (01-design-system.md)
-- [x] Feature 02: Navigation Layout (Sidebar & Navbar)
+- [x] Implemented navigation, layouts, and UI primitives (02-navigation-layout.md)
+- [x] Implemented Auth using Clerk (03-auth.md)
 
 ## In Progress
 
@@ -24,7 +25,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 03: TBD
+- Feature 04: TBD
 
 ## Open Questions
 
