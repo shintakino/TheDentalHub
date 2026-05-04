@@ -1,45 +1,46 @@
-# UI Context
+# UI Context: High-End Clinical
 
-## Aesthetic Principle
-**"Clean, Trustworthy, and Professional."**
-The UI should feel like a modern healthcare application. It uses a high-contrast design with plenty of whitespace to ensure readability and a sense of hygiene.
+## 1. Design Direction Summary
+- **Aesthetic Name:** **High-End Clinical (Refined Minimalist)**
+- **DFII Score:** 15 (Excellent)
+- **Differentiation Anchor:** *Instead of generic boxed data tables and standard calendars, schedules and patient profiles are floating, deeply-shadowed, borderless panes over a subtle, noise-textured background. Headings use an elegant modern serif to convey established trust, while data remains highly legible.*
+- **Key Inspiration:** High-end boutique dental clinics and luxury skincare brands (e.g., Aesop).
 
-## Clinic Branding System
-DentalHub allows each clinic (tenant) to inject their own identity into the platform.
+## 2. Core Principles
+1. **Pristine & Authoritative:** The interface must inspire absolute trust. It should not look like a generic SaaS dashboard.
+2. **Macro Whitespace:** Break the grid. Use enormous padding and negative space to frame content, rather than packing it tightly.
+3. **Typography as Structure:** Use the modern serif (`Playfair Display`) strictly for brand-level headings or critical numbers. Use the highly geometric sans-serif (`Outfit`) for UI controls and dense data.
 
-### Customization Points
-- **Primary Color**: Used for buttons, active states, and brand highlights.
-- **Secondary Color**: Used for subtle accents and backgrounds.
-- **Clinic Logo**: Displayed in the header and on booking pages.
-- **Typography**: Professional sans-serif (defaults to Geist Sans).
+## 3. Design System Snapshot
 
-## Base Theme (Default)
-The default theme is light-based, but supports a professional dark mode if the user's system prefers it.
+### Typography
+- **Display / Headings:** `Playfair Display` (injects an editorial, trustworthy, luxury feel).
+- **Body / Data:** `Outfit` (geometric, clean, extremely legible at small sizes).
+- **Schedules / Numerals:** Enable tabular numerals (`font-variant-numeric: tabular-nums`) on all numeric data tables and calendars.
 
-| Role             | Default Value          | Purpose                                   |
-| ---------------- | ---------------------- | ----------------------------------------- |
-| Background       | `#FFFFFF` / `#09090B`  | Main page background                      |
-| Surface          | `#F9FAFB` / `#18181B`  | Cards and panels                          |
-| Primary Brand    | Variable (e.g. Blue)   | Main action color                         |
-| Text Primary     | `#111827` / `#FAFAFA`  | High readability for medical info         |
-| Text Secondary   | `#4B5563` / `#A1A1AA`  | Labels and secondary info                 |
-| Success (States) | `#10B981`              | Confirmed, Completed status               |
-| Danger (States)  | `#EF4444`              | Cancelled, No-show status                 |
-| Warning (States) | `#F59E0B`              | Rescheduled, Checked-in status            |
+### Color Palette & Theme
+We strictly avoid standard "Tailwind Blue" and evenly balanced generic palettes.
+The theme is anchored in high contrast between "Alabaster/Obsidian" and a striking "Surgical Sapphire" accent.
 
-## Typography
-- **UI Text**: Geist Sans (Clean, modern readability).
-- **Data/Time**: Tabular numerals for alignment in schedules.
+| Role             | Light Mode Value   | Dark Mode Value   | Purpose                                   |
+| ---------------- | ------------------ | ----------------- | ----------------------------------------- |
+| Background       | `#FAFAFA` (Alabaster)| `#050B14` (Obsidian)| Main page background (softened white/black) |
+| Surface (Cards)  | `#FFFFFF` (Pure)   | `#0A1120` (Navy)  | Floating borderless panes                 |
+| Primary Brand    | `#0047FF` (Sapphire)| `#0047FF` (Sapphire)| Main action color, unapologetic and bold|
+| Text Primary     | `#0A1120`          | `#FAFAFA`         | High readability                          |
+| Text Secondary   | `#64748B`          | `#94A3B8`         | Subtle labels                             |
+| Success (States) | `#00A86B` (Mint)   | `#00A86B`         | Confirmed, Completed status               |
+| Danger (States)  | `#E11D48` (Rose)   | `#E11D48`         | Cancelled, No-show status                 |
+| Warning (States) | `#D97706` (Amber)  | `#D97706`         | Rescheduled, Checked-in status            |
 
-## Component Patterns
-- **Booking Calendar**: Large, clear slots with status indicators.
-- **Appointment Cards**: High-density but clear information (Patient, Time, Service).
-- **Dashboard Widgets**: Summary stats with clear trend indicators.
+### Spatial Composition & Texture
+- **Texture:** The main background features a subtle SVG noise overlay (`bg-noise`) to reduce digital harshness and create an organic, tactile feel.
+- **Shadows vs Borders:** Surfaces (Cards, Dialogs) should have **no borders** (`border-none` or `border-transparent`). Instead, they rely on soft, diffused drop shadows to separate them from the background.
+- **Micro-motion:** Minimalist. A subtle scale-up on hover for primary actions, but zero "bounce" or playful animations.
 
-## Layout
-- **Patient View**: Simple, mobile-first booking funnel.
-- **Staff View**: Multi-pane dashboard for schedule management and walk-in queue.
-- **Owner View**: Analytical overview and branch management settings.
+## 4. Component Patterns
+- **Booking Calendar:** Large, floating slots with status indicated by elegant, minimalist dots (Mint/Rose/Amber) rather than full-color background blocks.
+- **Appointment Cards:** Borderless, deep shadow, high contrast serif typography for the patient's name.
+- **Dashboard Widgets:** Pure white panes with large serif numbers for statistics, avoiding generic chart borders.
 
-## Icons
-Lucide React. Use medical and scheduling-themed icons (Calendar, Clock, User, Stethoscope, Building).
+> "This avoids generic UI by relying on deep shadows and typography-driven hierarchy instead of default bordered cards and system fonts."
