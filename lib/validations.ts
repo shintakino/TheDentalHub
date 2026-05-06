@@ -67,6 +67,14 @@ export const inviteStaffSchema = z.object({
   name: z.string().min(1, "Name is required")
 });
 
+export const clinicOnboardingSchema = z.object({
+  clinicName: z.string().min(2, {
+    message: "Clinic name must be at least 2 characters.",
+  }),
+});
+
+export type ClinicOnboardingPayload = z.infer<typeof clinicOnboardingSchema>;
+
 export type GetSlotsQuery = z.infer<typeof getSlotsQuerySchema>;
 export type BookAppointmentPayload = z.infer<typeof bookAppointmentSchema>;
 export type UpdateBrandingPayload = z.infer<typeof updateBrandingSchema>;

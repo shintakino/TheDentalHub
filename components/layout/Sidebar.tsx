@@ -15,10 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { useState } from "react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useOrganization } from "@clerk/nextjs";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/overview", icon: LayoutDashboard },
   { name: "Schedule", href: "/schedule", icon: CalendarDays },
   { name: "Patients", href: "/patients", icon: Users },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
@@ -28,16 +28,19 @@ const navigation = [
 function NavLinks({ onItemClick }: { onItemClick?: () => void }) {
   const pathname = usePathname();
   const { has } = useAuth();
+  const { organization } = useOrganization();
+  const orgId = organization?.id || "";
 
   return (
     <nav className="flex flex-col gap-6 mt-8 px-6">
       {navigation.map((item) => {
-        const isActive = pathname === item.href;
+        const fullHref = orgId ? `/${orgId}${item.href}` : item.href;
+        const isActive = pathname === fullHref;
         
         const link = (
           <Link
             key={item.name}
-            href={item.href}
+            href={fullHref}
             onClick={onItemClick}
             className={cn(
               "group flex items-center gap-4 py-2 text-[15px] transition-all duration-300 relative",

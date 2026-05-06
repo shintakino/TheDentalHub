@@ -32,10 +32,11 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Implemented Super Admin Dashboard (12-super-admin-dashboard.md)
 - [x] Implemented Communications & Notifications (Branded Email/SMS) (13-communications-notifications.md)
 - [x] Implemented Patient Portal (14-patient-portal.md)
+- [x] Implemented Clinic Discovery & Marketplace (15-clinic-discovery-marketplace.md)
 
 ## In Progress
 
-- Feature 15: Clinic Discovery & Marketplace (Task 1: API Endpoint)
+- Feature 16: Clinic Onboarding Flow
 
 ## Next Up
 
