@@ -1,53 +1,58 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getTenantId } from "@/lib/db/tenant";
+import { NextResponse } from "next/server";
 import { mockDb } from "@/lib/db/mock-db";
 import { generateSlots } from "@/lib/scheduling/slot-generator";
-import { getSlotsQuerySchema } from "@/lib/validations";
+import { z } from "zod";
+
+const querySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  serviceId: z.string().uuid().or(z.string()), // UUID or mock ID e.g. 's1'
+});
 
 export async function GET(
-  request: NextRequest,
+  req: Request,
   { params }: { params: Promise<{ branchId: string }> }
 ) {
-  try {
-    const tenantId = await getTenantId();
-    const resolvedParams = await params;
-    const branchId = resolvedParams.branchId;
+  const { branchId } = await params;
+  const { searchParams } = new URL(req.url);
+  const validated = querySchema.safeParse({
+    date: searchParams.get("date"),
+    serviceId: searchParams.get("serviceId"),
+  });
 
-    const searchParams = request.nextUrl.searchParams;
-    const date = searchParams.get("date");
-    const serviceId = searchParams.get("serviceId");
-
-    const validationResult = getSlotsQuerySchema.safeParse({ date, serviceId });
-    if (!validationResult.success) {
-      return NextResponse.json({ error: validationResult.error.format() }, { status: 400 });
-    }
-
-    const branchConfig = await mockDb.getBranch(branchId, tenantId);
-    if (!branchConfig) {
-      return NextResponse.json({ error: "Branch not found or access denied" }, { status: 404 });
-    }
-
-    const bookings = await mockDb.getBookings(branchId, tenantId, validationResult.data.date);
-
-    const availableSlots = generateSlots({
-      date: validationResult.data.date,
-      timezone: branchConfig.timezone,
-      operatingHours: branchConfig.operatingHours,
-      serviceDuration: branchConfig.serviceDuration,
-      bufferTime: branchConfig.bufferTime,
-      bookedAppointments: bookings.map(b => ({
-        startTime: b.startTime,
-        endTime: b.endTime
-      }))
-    });
-
-    return NextResponse.json({ slots: availableSlots });
-  } catch (err) {
-    const error = err as Error;
-    if (error.message && error.message.includes("No active organization found")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    console.error("Error generating slots:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  if (!validated.success) {
+    return NextResponse.json({ error: "Invalid parameters", details: validated.error }, { status: 400 });
   }
+
+  const { date, serviceId } = validated.data;
+  const branch = await mockDb.getBranchById(branchId);
+  if (!branch) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+
+  const service = await mockDb.getServiceById(serviceId);
+  if (!service) return NextResponse.json({ error: "Service not found" }, { status: 404 });
+
+  // Get booked appointments for this branch/date
+  const booked = await mockDb.getAppointmentsByBranchAndDate(branchId, date);
+
+  // Find operating hours for the specific day of week
+  // date-fns getDay() returns 0 for Sunday, 1 for Monday, etc.
+  const dayOfWeek = new Date(date).getDay();
+  const hours = branch.operatingHours.find(h => h.day === dayOfWeek);
+
+  if (!hours || !hours.active) {
+    return NextResponse.json({ slots: [] });
+  }
+
+  const slots = generateSlots({
+    date,
+    timezone: branch.timezone,
+    operatingHours: { start: hours.open, end: hours.close },
+    serviceDuration: service.duration,
+    bufferTime: 15, // Default buffer
+    bookedAppointments: booked.map(b => ({
+      startTime: b.startTime.toISOString(),
+      endTime: b.endTime.toISOString(),
+    })),
+  });
+
+  return NextResponse.json({ slots });
 }

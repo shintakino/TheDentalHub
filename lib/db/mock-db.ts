@@ -7,8 +7,16 @@ export interface DBAppointment extends Appointment {
   tenantId: string;
   branchId: string;
   serviceId: string;
-  patientId: string;
-  status: "confirmed" | "cancelled";
+  patientName: string;
+  patientEmail: string;
+  status: "confirmed" | "cancelled" | "checked_in" | "in_progress" | "completed" | "no_show";
+}
+
+export interface ServiceConfig {
+  id: string;
+  tenantId: string;
+  name: string;
+  duration: number; // minutes
 }
 
 export interface BranchConfig {
@@ -17,9 +25,7 @@ export interface BranchConfig {
   name: string;
   address: string;
   timezone: string;
-  operatingHours: { start: string; end: string };
-  serviceDuration: number;
-  bufferTime: number;
+  operatingHours: { day: number; open: string; close: string; active: boolean }[];
   latitude: number;
   longitude: number;
 }
@@ -36,6 +42,12 @@ export interface ClinicConfig {
 
 // In-memory state
 const appointments: DBAppointment[] = [];
+const services: ServiceConfig[] = [
+  { id: "s1", tenantId: "org_123", name: "General Consultation", duration: 30 },
+  { id: "s2", tenantId: "org_123", name: "Teeth Whitening", duration: 60 },
+  { id: "s3", tenantId: "org_123", name: "Dental Emergency", duration: 45 },
+];
+
 const clinics: ClinicConfig[] = [
   {
     id: "clinic-1",
@@ -62,9 +74,15 @@ const branches: BranchConfig[] = [
     name: "Downtown Branch",
     address: "123 Main St, New York, NY 10001",
     timezone: "America/New_York",
-    operatingHours: { start: "09:00", end: "17:00" },
-    serviceDuration: 30,
-    bufferTime: 10,
+    operatingHours: [
+      { day: 0, open: "09:00", close: "17:00", active: false },
+      { day: 1, open: "09:00", close: "17:00", active: true },
+      { day: 2, open: "09:00", close: "17:00", active: true },
+      { day: 3, open: "09:00", close: "17:00", active: true },
+      { day: 4, open: "09:00", close: "17:00", active: true },
+      { day: 5, open: "09:00", close: "17:00", active: true },
+      { day: 6, open: "09:00", close: "17:00", active: false },
+    ],
     latitude: 40.7128,
     longitude: -74.0060,
   },
@@ -74,9 +92,9 @@ const branches: BranchConfig[] = [
     name: "Uptown Branch",
     address: "456 Park Ave, New York, NY 10022",
     timezone: "America/New_York",
-    operatingHours: { start: "08:00", end: "16:00" },
-    serviceDuration: 45,
-    bufferTime: 15,
+    operatingHours: [
+      { day: 1, open: "08:00", close: "16:00", active: true },
+    ],
     latitude: 40.7736,
     longitude: -73.9566,
   }
@@ -97,6 +115,16 @@ export const mockDb = {
     return clinics.find((c) => c.subdomain === subdomain);
   },
 
+  getBranchById: async (branchId: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return branches.find((b) => b.id === branchId);
+  },
+
+  getServiceById: async (serviceId: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return services.find((s) => s.id === serviceId);
+  },
+
   getBranch: async (branchId: string, tenantId: string) => {
     // Simulate DB delay
     await new Promise((resolve) => setTimeout(resolve, 10));
@@ -106,6 +134,11 @@ export const mockDb = {
   getBranches: async (tenantId: string) => {
     await new Promise((resolve) => setTimeout(resolve, 10));
     return branches.filter((b) => b.tenantId === tenantId);
+  },
+
+  getServices: async (tenantId: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return services.filter((s) => s.tenantId === tenantId);
   },
 
   searchClinics: async (query?: string) => {
@@ -127,13 +160,45 @@ export const mockDb = {
     return results;
   },
 
+  getAppointmentsByBranchAndDate: async (branchId: string, date: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return appointments.filter(
+      (app) => app.branchId === branchId && app.startTime.toISOString().startsWith(date) && app.status === "confirmed"
+    );
+  },
+
+  isSlotAvailable: async (branchId: string, startTime: string, endTime: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    
+    const conflicting = appointments.find((app) => 
+      app.branchId === branchId &&
+      app.status === "confirmed" &&
+      !(
+        end <= new Date(app.startTime) ||
+        start >= new Date(app.endTime)
+      )
+    );
+    
+    return !conflicting;
+  },
+
   getBookings: async (branchId: string, tenantId: string, date: string) => {
     await new Promise((resolve) => setTimeout(resolve, 10));
-    // Very basic date filtering by checking if start time includes the date string
-    // In a real DB, we'd do a range query on UTC timestamps covering the branch's local day
     return appointments.filter(
       (app) => app.branchId === branchId && app.tenantId === tenantId && app.status === "confirmed"
     );
+  },
+
+  createAppointment: async (appointment: Omit<DBAppointment, "id">) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    const newApp: DBAppointment = {
+      ...appointment,
+      id: `app-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
+    appointments.push(newApp);
+    return newApp;
   },
 
   // Simulates a transaction with a row-level lock or distributed lock
@@ -167,8 +232,8 @@ export const mockDb = {
 
       const newApp: DBAppointment = {
         ...appointment,
-        id: `app-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         status: "confirmed",
+        id: `app-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       };
 
       appointments.push(newApp);
