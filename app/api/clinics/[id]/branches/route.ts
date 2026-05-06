@@ -4,6 +4,7 @@ import { branches } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { branchSchema } from "@/lib/validations";
 import { auth } from "@clerk/nextjs/server";
+import { geocodeAddress } from "@/lib/geocoding";
 
 export async function GET(
   request: NextRequest,
@@ -52,8 +53,13 @@ export async function POST(
       return NextResponse.json({ error: validation.error.format() }, { status: 400 });
     }
 
+    const { address } = validation.data;
+    const coords = address ? await geocodeAddress(address) : null;
+
     const [newBranch] = await db.insert(branches).values({
       ...validation.data,
+      latitude: coords?.lat?.toString(),
+      longitude: coords?.lng?.toString(),
       tenantId,
       updatedAt: new Date(),
     }).returning();

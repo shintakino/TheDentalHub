@@ -4,6 +4,7 @@ import { branches, appointments } from "@/lib/db/schema";
 import { eq, and, gt } from "drizzle-orm";
 import { branchSchema } from "@/lib/validations";
 import { auth } from "@clerk/nextjs/server";
+import { geocodeAddress } from "@/lib/geocoding";
 
 export async function PATCH(
   request: NextRequest,
@@ -28,9 +29,19 @@ export async function PATCH(
       return NextResponse.json({ error: validation.error.format() }, { status: 400 });
     }
 
+    const { address } = validation.data;
+    let coords = null;
+    if (address) {
+      coords = await geocodeAddress(address);
+    }
+
     const [updatedBranch] = await db.update(branches)
       .set({ 
         ...validation.data, 
+        ...(coords ? { 
+          latitude: coords.lat.toString(), 
+          longitude: coords.lng.toString() 
+        } : {}),
         updatedAt: new Date() 
       })
       .where(and(
