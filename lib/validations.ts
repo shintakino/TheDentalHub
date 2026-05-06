@@ -21,6 +21,31 @@ export const updateBrandingSchema = z.object({
   seoDescription: z.string().max(160).optional().nullable(),
 });
 
+export const analyticsQuerySchema = z.object({
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const analyticsResponseSchema = z.object({
+  summary: z.object({
+    totalBookings: z.number(),
+    noShowRate: z.number(),
+    avgUtilization: z.number(),
+    peakHour: z.string(),
+  }),
+  timeSeries: z.array(z.object({
+    date: z.string(),
+    bookings: z.number(),
+    utilization: z.number(),
+  })),
+  peakHours: z.array(z.object({
+    hour: z.string(),
+    count: z.number(),
+  })),
+});
+
 export type GetSlotsQuery = z.infer<typeof getSlotsQuerySchema>;
 export type BookAppointmentPayload = z.infer<typeof bookAppointmentSchema>;
 export type UpdateBrandingPayload = z.infer<typeof updateBrandingSchema>;
+export type AnalyticsQuery = z.infer<typeof analyticsQuerySchema>;
+export type AnalyticsResponse = z.infer<typeof analyticsResponseSchema>;
