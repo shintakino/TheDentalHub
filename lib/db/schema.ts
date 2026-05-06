@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, uuid, jsonb, integer, decimal } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const clinics = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -110,3 +111,36 @@ export const communicationsLog = pgTable("communications_log", {
   error: text("error"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// Relations
+export const clinicsRelations = relations(clinics, ({ many }) => ({
+  branches: many(branches),
+  appointments: many(appointments),
+}));
+
+export const branchesRelations = relations(branches, ({ one, many }) => ({
+  clinic: one(clinics, {
+    fields: [branches.tenantId],
+    references: [clinics.tenantId],
+  }),
+  appointments: many(appointments),
+}));
+
+export const servicesRelations = relations(services, ({ many }) => ({
+  appointments: many(appointments),
+}));
+
+export const appointmentsRelations = relations(appointments, ({ one }) => ({
+  clinic: one(clinics, {
+    fields: [appointments.tenantId],
+    references: [clinics.tenantId],
+  }),
+  branch: one(branches, {
+    fields: [appointments.branchId],
+    references: [branches.id],
+  }),
+  service: one(services, {
+    fields: [appointments.serviceId],
+    references: [services.id],
+  }),
+}));
