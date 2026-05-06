@@ -67,6 +67,7 @@ export const appointments = pgTable("appointments", {
   serviceId: uuid("service_id").notNull().references(() => services.id, { onDelete: 'cascade' }),
   patientName: text("patient_name").notNull(),
   patientEmail: text("patient_email"),
+  patientId: text("patient_id"),
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
   status: text("status", { enum: appointmentStatusEnum }).default("confirmed").notNull(),
