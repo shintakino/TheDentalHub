@@ -24,6 +24,9 @@ export const branches = pgTable("branches", {
   operatingHours: jsonb("operating_hours").$type<{ day: number; open: string; close: string; active: boolean }[]>().default([]).notNull(),
   latitude: decimal("latitude", { precision: 10, scale: 7 }),
   longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  nextSlots: jsonb("next_slots").$type<string[]>().default([]).notNull(),
+  availabilityUpdatedAt: timestamp("availability_updated_at"),
+  rating: decimal("rating", { precision: 2, scale: 1 }).default("4.5"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
