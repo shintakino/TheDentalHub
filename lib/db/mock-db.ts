@@ -14,23 +14,72 @@ export interface DBAppointment extends Appointment {
 export interface BranchConfig {
   id: string;
   tenantId: string;
+  name: string;
+  address: string;
   timezone: string;
   operatingHours: { start: string; end: string };
   serviceDuration: number;
   bufferTime: number;
+  latitude: number;
+  longitude: number;
+}
+
+export interface ClinicConfig {
+  id: string;
+  tenantId: string;
+  name: string;
+  logoUrl?: string;
+  primaryColor: string;
+  subdomain: string;
+  description?: string;
 }
 
 // In-memory state
 const appointments: DBAppointment[] = [];
+const clinics: ClinicConfig[] = [
+  {
+    id: "clinic-1",
+    tenantId: "org_123",
+    name: "Smile Dental Studio",
+    primaryColor: "#0047FF",
+    subdomain: "smile-dental",
+    description: "Premium cosmetic and family dentistry in the heart of the city.",
+  },
+  {
+    id: "clinic-2",
+    tenantId: "org_456",
+    name: "Elite Orthodontics",
+    primaryColor: "#00A86B",
+    subdomain: "elite-ortho",
+    description: "Specialized orthodontic care for all ages.",
+  }
+];
+
 const branches: BranchConfig[] = [
   {
     id: "branch-1",
     tenantId: "org_123",
+    name: "Downtown Branch",
+    address: "123 Main St, New York, NY 10001",
     timezone: "America/New_York",
     operatingHours: { start: "09:00", end: "17:00" },
     serviceDuration: 30,
     bufferTime: 10,
+    latitude: 40.7128,
+    longitude: -74.0060,
   },
+  {
+    id: "branch-2",
+    tenantId: "org_456",
+    name: "Uptown Branch",
+    address: "456 Park Ave, New York, NY 10022",
+    timezone: "America/New_York",
+    operatingHours: { start: "08:00", end: "16:00" },
+    serviceDuration: 45,
+    bufferTime: 15,
+    latitude: 40.7736,
+    longitude: -73.9566,
+  }
 ];
 
 // Mock locking mechanism
@@ -43,10 +92,39 @@ export const mockDb = {
     activeLocks.clear();
   },
 
+  getClinicBySubdomain: async (subdomain: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return clinics.find((c) => c.subdomain === subdomain);
+  },
+
   getBranch: async (branchId: string, tenantId: string) => {
     // Simulate DB delay
     await new Promise((resolve) => setTimeout(resolve, 10));
     return branches.find((b) => b.id === branchId && b.tenantId === tenantId);
+  },
+
+  getBranches: async (tenantId: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return branches.filter((b) => b.tenantId === tenantId);
+  },
+
+  searchClinics: async (query?: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    let results = clinics.map(clinic => ({
+      ...clinic,
+      branches: branches.filter(b => b.tenantId === clinic.tenantId)
+    }));
+
+    if (query) {
+      const q = query.toLowerCase();
+      results = results.filter(r => 
+        r.name.toLowerCase().includes(q) || 
+        r.description?.toLowerCase().includes(q) ||
+        r.branches.some(b => b.name.toLowerCase().includes(q) || b.address.toLowerCase().includes(q))
+      );
+    }
+
+    return results;
   },
 
   getBookings: async (branchId: string, tenantId: string, date: string) => {

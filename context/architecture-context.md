@@ -35,8 +35,18 @@
 
 ## Storage Model
 
-- **PostgreSQL**: Stores Clinic, Branch, Staff, Service, Appointment, Clinic Branding, and Audit Log data.
+- **PostgreSQL**: Stores Clinic, Branch (with `lat`, `lng`), Staff, Service, Appointment, Clinic Branding, and Audit Log data.
 - **Supabase Storage**: Stores binary assets like clinic logos.
+- **Audit Logs**: Every mutation to an appointment must create an entry in the `audit_logs` table.
+
+## Invariants
+
+1. All data access (except for Super Admin) must be scoped by `tenant_id`.
+2. No appointment can exist without a `confirmed` status at creation.
+3. Cancellation must release the locked slot immediately.
+4. Staff removal must not delete historical appointment records.
+5. All status transitions must be logged in the audit trail.
+c logos.
 - **Audit Logs**: Every mutation to an appointment must create an entry in the `audit_logs` table.
 
 ## Invariants

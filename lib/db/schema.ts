@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, jsonb, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, jsonb, integer, decimal } from "drizzle-orm/pg-core";
 
 export const clinics = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -21,6 +21,8 @@ export const branches = pgTable("branches", {
   address: text("address"),
   timezone: text("timezone").default("UTC").notNull(),
   operatingHours: jsonb("operating_hours").$type<{ day: number; open: string; close: string; active: boolean }[]>().default([]).notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

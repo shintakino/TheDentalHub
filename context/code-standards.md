@@ -37,5 +37,5 @@
 ## File Organization
 - `db/` — Drizzle schema and migrations.
 - `lib/` — Business logic (scheduling engine, RBAC, etc.).
-- `app/` — Next.js routes and layouts.
-- `components/` — UI components (Shared and Feature-specific).
+- `app/` — Next.js routes and layouts (organized by `(discovery)`, `(booking)`, `(dashboard)`, etc.).
+- `components/discovery` — Map and search components (Leaflet).

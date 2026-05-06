@@ -39,7 +39,8 @@ The theme is anchored in a pristine "Alabaster" foundation, using "Pure White" s
 - **Micro-motion:** Minimalist. A subtle scale-up on hover for primary actions, but zero "bounce" or playful animations.
 
 ## 4. Component Patterns
-- **Booking Calendar:** Large, floating slots with status indicated by elegant, minimalist dots (Mint/Rose/Amber) rather than full-color background blocks.
+- **Discovery Map:** A split-screen layout (`h-[calc(100vh-64px)]`). Left side: Scrollable clinic cards with diffuse shadows and large typography. Right side: Full-height Leaflet map with custom "Surgical Sapphire" markers.
+- **Booking Calendar:** Large, floating slots with status indicated by elegant, minimalist dots.
 - **Appointment Cards:** Borderless, diffuse shadow, high contrast serif typography for the patient's name.
 - **Dashboard Widgets:** Pure white panes over Alabaster backgrounds with large serif numbers for statistics, avoiding generic chart borders.
 
