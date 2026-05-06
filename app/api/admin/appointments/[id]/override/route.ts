@@ -7,7 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const isAdmin = await isSuperAdmin();
   if (!isAdmin) {
@@ -22,7 +22,7 @@ export async function POST(
     return new NextResponse("Missing required fields", { status: 400 });
   }
 
-  const appointmentId = params.id;
+  const { id: appointmentId } = await params;
 
   try {
     await db.transaction(async (tx) => {
