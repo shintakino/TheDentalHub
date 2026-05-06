@@ -99,8 +99,6 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
 
   return (
     <div className="space-y-6">
-      <h2 className="font-playfair text-3xl font-semibold text-obsidian tracking-tight">Daily Schedule</h2>
-      
       {appointments.length === 0 ? (
         <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-alabaster">
           <p className="text-slate-500 font-outfit text-lg">No appointments scheduled for today.</p>

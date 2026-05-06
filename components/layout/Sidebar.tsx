@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { useState } from "react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useAuth } from "@clerk/nextjs";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -26,13 +27,14 @@ const navigation = [
 
 function NavLinks({ onItemClick }: { onItemClick?: () => void }) {
   const pathname = usePathname();
+  const { has } = useAuth();
 
   return (
     <nav className="flex flex-col gap-6 mt-8 px-6">
       {navigation.map((item) => {
         const isActive = pathname === item.href;
         
-        return (
+        const link = (
           <Link
             key={item.name}
             href={item.href}
@@ -55,6 +57,14 @@ function NavLinks({ onItemClick }: { onItemClick?: () => void }) {
             {item.name}
           </Link>
         );
+
+        if (item.name === "Settings") {
+          const isAdmin = has && has({ role: "org:admin" });
+          if (!isAdmin) return null;
+          return link;
+        }
+
+        return link;
       })}
     </nav>
   );
