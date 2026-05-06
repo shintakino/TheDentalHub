@@ -1,58 +1,51 @@
-# Design Spec: Clinic Discovery & Patient Booking (Feature 11)
+# Patient Booking Flow Design Spec
 
-## Goal
-Deliver a frictionless marketplace where patients can discover dental clinics via an interactive map and search, followed by a branded, account-based booking experience.
+## Overview
+Deliver a frictionless, multi-step appointment booking experience for patients. The flow dynamically adapts to the clinic's configuration (e.g., skipping branch selection if only one branch exists) and ensures atomic, double-booking-proof confirmation.
 
-## User Experience
+## Goals
+- **Frictionless UX**: Minimal steps, intuitive navigation.
+- **Dynamic Branding**: Inject clinic-specific colors and logos.
+- **Atomic Booking**: Prevent race conditions during slot selection.
+- **Timezone Integrity**: Display slots in the clinic's local time.
 
-### 1. Clinic Discovery (`app/(discovery)/page.tsx`)
-A split-screen interface combining search results with a map.
+## Architecture
 
-- **Search & Filters**:
-  - Global search bar for clinic names, services, or locations.
-  - Filter by "Available Today" or specific service types.
-- **Clinic Listings (Left Side)**:
-  - Cards showing clinic name, logo, rating, and "Next Available" slot.
-  - Clicking a card centers the map on that clinic.
-- **Interactive Map (Right Side)**:
-  - Uses **Leaflet** with custom styled markers.
-  - Popups on markers show quick clinic info and a "Book Now" link.
+### Routing & State Management
+- **URL-Driven Wizard**: State is managed via URL search parameters (`step`, `serviceId`, `branchId`, `date`, `time`).
+- **Dynamic Skipping**: If `branches.length === 1`, Step 2 (Branch Selection) is automatically skipped.
+- **Route**: `app/(booking)/[tenantSlug]/page.tsx`.
 
-### 2. Booking Wizard (`app/(booking)/[tenantSlug]/page.tsx`)
-A multi-step interface driven by URL search parameters.
+### Data Model & Flow
+1. **Fetch Clinic**: Server component fetches clinic by `tenantSlug`.
+2. **Fetch Branches/Services**: Server component fetches available branches and services for the `tenantId`.
+3. **Step Logic**:
+    - **Step 1 (Service)**: Select a service from the list.
+    - **Step 2 (Branch)**: Select a branch (skipped if only one).
+    - **Step 3 (Time)**: Interactive calendar and slot picker. Fetches slots from `/api/branches/[branchId]/slots` (or similar) or generates them client-side using `lib/scheduling/slot-generator.ts`.
+    - **Step 4 (Review)**: Final summary and "Confirm" button. Requires Clerk authentication.
 
-- **Step 1: Service Selection**
-- **Step 2: Branch Selection** (If > 1 branch)
-- **Step 3: Date & Time Selection** (Clinic Local Time)
-- **Step 4: Review & Authentication** (Branded Sign-In)
+### Component Breakdown
+- **BookingWizard (Server)**: High-level layout and step routing.
+- **ServiceSelection (Client)**: Searchable list of services.
+- **BranchSelection (Client)**: List of branches with addresses.
+- **SchedulingSection (Client)**: 
+    - `Calendar`: For date selection.
+    - `SlotGrid`: Fetches/Generates and displays available slots for the selected date/branch.
+- **BookingSummary (Client)**: Review details and trigger final booking.
 
-### 3. Branded Patient Auth (`app/(booking)/[tenantSlug]/sign-in/page.tsx`)
-- Clerk `<SignIn />` with custom theme injection.
+### API Endpoints
+- **GET `/api/branches/[branchId]/slots?date=YYYY-MM-DD`**: Returns available slots using `generateSlots` logic.
+- **POST `/api/appointments/book`**: 
+    - **Payload**: `branchId`, `serviceId`, `startTime`, `endTime`, `patientId` (from Clerk).
+    - **Logic**: Transactional check + insert.
 
-### 4. Success Confirmation (`app/(booking)/[tenantSlug]/success/[id]/page.tsx`)
+## Technical Invariants
+- **No `any`**: Strict TypeScript usage throughout.
+- **Zod Validation**: All API payloads and search parameters validated.
+- **Atomic Locking**: Final booking must use a DB transaction to prevent double-booking.
 
-## Technical Architecture
-
-### Discovery Logic
-- **Geospatial Data**: Branch table updated with `latitude` and `longitude` (decimal).
-- **Search API**: `GET /api/clinics/search?query=...&lat=...&lng=...`.
-  - Performs simple distance-based sorting or text-based search.
-
-### Mapping Integration
-- **Leaflet**: Client-side component for map rendering.
-- **Geocoding**: Seed data must include valid lat/lng coordinates for branches.
-
-### Data Flow
-1. **Discover**: Patient uses root `/` to find a clinic.
-2. **Transfer**: "Book Now" links to `/[tenantSlug]/book`.
-3. **Flow**: Standard booking wizard logic.
-
-## Invariants
-- **Discovery Privacy**: Search results only expose public clinic/branch info, never patient or appointment data.
-- **Tenant Isolation**: Once the user enters the `/[tenantSlug]` path, all logic is strictly scoped to that clinic.
-
-## Success Criteria
-- Map renders correctly with Leaflet and displays all active clinic branches.
-- Search filters clinics accurately by name and service.
-- Transition from Discovery to Booking is seamless.
-- `npm run build` completes with zero type errors.
+## Testing Strategy
+- **Unit Tests**: Test `generateSlots` with various edge cases (buffer times, overlapping appointments).
+- **Integration Tests**: Test the booking API for concurrency (simultaneous booking attempts for the same slot).
+- **E2E Tests**: Walk through the wizard from Step 1 to Success page.
