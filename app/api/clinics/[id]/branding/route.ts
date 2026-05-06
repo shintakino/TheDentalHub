@@ -7,13 +7,14 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function PATCH(
   request: NextRequest, 
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { orgId, orgRole } = await auth();
     
-    // params.id is the tenantId (Clerk Organization ID)
-    if (!orgId || orgId !== params.id) {
+    // id is the tenantId (Clerk Organization ID)
+    if (!orgId || orgId !== id) {
       return NextResponse.json({ error: "Unauthorized: Organization mismatch" }, { status: 401 });
     }
 
@@ -33,7 +34,7 @@ export async function PATCH(
         ...validation.data, 
         updatedAt: new Date() 
       })
-      .where(eq(clinics.tenantId, params.id));
+      .where(eq(clinics.tenantId, id));
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface IdentityTabProps {
   clinic: {
@@ -79,25 +80,23 @@ export function IdentityTab({ clinic }: IdentityTabProps) {
               )}
             </div>
             <div className="space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="relative cursor-pointer"
-                disabled={isUploading}
-                asChild
+              <label
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "relative cursor-pointer",
+                  isUploading && "pointer-events-none opacity-50"
+                )}
               >
-                <label>
-                  <Upload className="h-4 w-4 mr-2" />
-                  {logoUrl ? "Change Logo" : "Upload Logo"}
-                  <input
-                    type="file"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={handleLogoUpload}
-                    accept="image/*"
-                    disabled={isUploading}
-                  />
-                </label>
-              </Button>
+                <Upload className="h-4 w-4 mr-2" />
+                {logoUrl ? "Change Logo" : "Upload Logo"}
+                <input
+                  type="file"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={handleLogoUpload}
+                  accept="image/*"
+                  disabled={isUploading}
+                />
+              </label>
               <p className="text-xs text-muted-foreground">
                 Recommended: Square image, PNG or SVG, max 2MB.
               </p>

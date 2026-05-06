@@ -1,4 +1,5 @@
-export default function BookingPage({ params }: { params: { tenantSlug: string } }) {
+export default async function BookingPage({ params }: { params: Promise<{ tenantSlug: string }> }) {
+  const { tenantSlug } = await params;
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div className="text-center space-y-2">

@@ -7,13 +7,14 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function POST(
   request: NextRequest, 
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { orgId, orgRole } = await auth();
     
-    // params.id is the tenantId (Clerk Organization ID)
-    if (!orgId || orgId !== params.id) {
+    // id is the tenantId (Clerk Organization ID)
+    if (!orgId || orgId !== id) {
       return NextResponse.json({ error: "Unauthorized: Organization mismatch" }, { status: 401 });
     }
 
@@ -40,14 +41,14 @@ export async function POST(
       return NextResponse.json({ error: "File too large. Maximum size is 2MB." }, { status: 400 });
     }
 
-    const logoUrl = await uploadClinicLogo(params.id, file);
+    const logoUrl = await uploadClinicLogo(id, file);
 
     await db.update(clinics)
       .set({ 
         logoUrl, 
         updatedAt: new Date() 
       })
-      .where(eq(clinics.tenantId, params.id));
+      .where(eq(clinics.tenantId, id));
 
     return NextResponse.json({ logoUrl });
   } catch (error) {

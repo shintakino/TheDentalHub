@@ -8,10 +8,11 @@ export default async function BookingLayout({
   params
 }: {
   children: React.ReactNode;
-  params: { tenantSlug: string };
+  params: Promise<{ tenantSlug: string }>;
 }) {
+  const { tenantSlug } = await params;
   const clinic = await db.query.clinics.findFirst({
-    where: eq(clinics.subdomain, params.tenantSlug)
+    where: eq(clinics.subdomain, tenantSlug)
   });
 
   if (!clinic) {
