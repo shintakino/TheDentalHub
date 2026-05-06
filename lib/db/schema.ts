@@ -4,6 +4,12 @@ export const clinics = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
   tenantId: text("tenant_id").notNull().unique(), // Corresponds to Clerk organization ID
   name: text("name").notNull(),
+  logoUrl: text("logo_url"),
+  primaryColor: text("primary_color").default("#0047FF"),
+  secondaryColor: text("secondary_color"),
+  subdomain: text("subdomain").unique(),
+  seoTitle: text("seo_title"),
+  seoDescription: text("seo_description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
