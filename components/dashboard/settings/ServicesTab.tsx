@@ -126,12 +126,10 @@ export function ServicesTab({ tenantId }: { tenantId: string }) {
                   </TableCell>
                   <TableCell className="py-6 text-right pr-8">
                     <DropdownMenu>
-                      <DropdownMenuTrigger 
-                        render={
-                          <Button variant="ghost" size="icon" className="text-slate-400 hover:text-obsidian" />
-                        }
-                      >
-                        <MoreHorizontal className="w-5 h-5" />
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-obsidian">
+                          <MoreHorizontal className="w-5 h-5" />
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40 rounded-xl shadow-lg border-slate-100">
                         <DropdownMenuItem onClick={() => handleEdit(service)} className="gap-2 cursor-pointer py-2.5">
