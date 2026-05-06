@@ -7,6 +7,7 @@ export interface DBAppointment extends Appointment {
   tenantId: string;
   branchId: string;
   serviceId: string;
+  patientId: string;
   patientName: string;
   patientEmail: string;
   status: "confirmed" | "cancelled" | "checked_in" | "in_progress" | "completed" | "no_show";
@@ -163,7 +164,7 @@ export const mockDb = {
   getAppointmentsByBranchAndDate: async (branchId: string, date: string) => {
     await new Promise((resolve) => setTimeout(resolve, 10));
     return appointments.filter(
-      (app) => app.branchId === branchId && app.startTime.toISOString().startsWith(date) && app.status === "confirmed"
+      (app) => app.branchId === branchId && app.startTime.startsWith(date) && app.status === "confirmed"
     );
   },
 
@@ -189,6 +190,11 @@ export const mockDb = {
     return appointments.filter(
       (app) => app.branchId === branchId && app.tenantId === tenantId && app.status === "confirmed"
     );
+  },
+
+  getAppointmentById: async (id: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return appointments.find((a) => a.id === id);
   },
 
   createAppointment: async (appointment: Omit<DBAppointment, "id">) => {

@@ -49,8 +49,8 @@ export async function GET(
     serviceDuration: service.duration,
     bufferTime: 15, // Default buffer
     bookedAppointments: booked.map(b => ({
-      startTime: b.startTime.toISOString(),
-      endTime: b.endTime.toISOString(),
+      startTime: b.startTime,
+      endTime: b.endTime,
     })),
   });
 

@@ -1,6 +1,7 @@
 import { mockDb } from "@/lib/db/mock-db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { format } from "date-fns";
 
 export default async function BookingSuccessPage({
   params,
@@ -11,14 +12,11 @@ export default async function BookingSuccessPage({
   const clinic = await mockDb.getClinicBySubdomain(tenantSlug);
   if (!clinic) notFound();
 
-  // In a real app, fetch appointment details by ID
-  const appointment = {
-    service: "General Consultation",
-    date: "May 10, 2026",
-    time: "10:00 AM",
-    location: "Downtown Branch",
-    address: "123 Main St, New York, NY 10001"
-  };
+  const appointment = await mockDb.getAppointmentById(id);
+  if (!appointment) notFound();
+
+  const branch = await mockDb.getBranchById(appointment.branchId);
+  const service = await mockDb.getServiceById(appointment.serviceId);
 
   return (
     <div className="max-w-2xl mx-auto space-y-12 py-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -39,7 +37,7 @@ export default async function BookingSuccessPage({
           <div className="flex justify-between items-start pb-6 border-b border-slate-100">
             <div>
               <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground mb-1">Service</p>
-              <h3 className="text-xl font-bold">{appointment.service}</h3>
+              <h3 className="text-xl font-bold">{service?.name}</h3>
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground mb-1">Status</p>
@@ -53,13 +51,13 @@ export default async function BookingSuccessPage({
           <div className="grid grid-cols-2 gap-8 py-2">
             <div>
               <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground mb-1">Date & Time</p>
-              <p className="font-bold">{appointment.date}</p>
-              <p className="text-sm font-medium text-slate-500">{appointment.time}</p>
+              <p className="font-bold">{format(new Date(appointment.startTime), "PPP")}</p>
+              <p className="text-sm font-medium text-slate-500">{format(new Date(appointment.startTime), "p")}</p>
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground mb-1">Location</p>
-              <p className="font-bold">{appointment.location}</p>
-              <p className="text-xs font-medium text-slate-500">{appointment.address}</p>
+              <p className="font-bold">{branch?.name}</p>
+              <p className="text-xs font-medium text-slate-500">{branch?.address}</p>
             </div>
           </div>
         </div>
@@ -71,20 +69,20 @@ export default async function BookingSuccessPage({
           </button>
           
           <Link 
-            href="/"
+            href={`/${tenantSlug}/book`}
             className="block w-full text-center py-4 rounded-2xl bg-[#0A1120] text-white font-bold shadow-xl hover:opacity-90 transition-all"
           >
-            Find Another Clinic
+            Book Another Appointment
           </Link>
         </div>
       </div>
 
       <div className="text-center">
         <Link 
-          href={`/dashboard`}
+          href={`/dashboard/overview`}
           className="text-sm font-bold text-primary uppercase tracking-widest hover:opacity-80 transition-opacity"
         >
-          View My Dashboard →
+          View My Appointments →
         </Link>
       </div>
     </div>

@@ -43,8 +43,8 @@ export async function POST(req: Request) {
       patientName,
       patientEmail,
       patientId: userId,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
+      startTime,
+      endTime,
     });
 
     return NextResponse.json({ appointment });
