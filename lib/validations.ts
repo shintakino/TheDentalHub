@@ -44,8 +44,34 @@ export const analyticsResponseSchema = z.object({
   })),
 });
 
+export const branchSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  address: z.string().optional(),
+  timezone: z.string().default("UTC"),
+  operatingHours: z.array(z.object({
+    day: z.number().min(0).max(6),
+    open: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
+    close: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
+    active: z.boolean()
+  }))
+});
+
+export const serviceSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  duration: z.number().positive("Duration must be positive")
+});
+
+export const inviteStaffSchema = z.object({
+  email: z.string().email("Invalid email"),
+  role: z.enum(["admin", "dentist", "receptionist"]),
+  name: z.string().min(1, "Name is required")
+});
+
 export type GetSlotsQuery = z.infer<typeof getSlotsQuerySchema>;
 export type BookAppointmentPayload = z.infer<typeof bookAppointmentSchema>;
 export type UpdateBrandingPayload = z.infer<typeof updateBrandingSchema>;
 export type AnalyticsQuery = z.infer<typeof analyticsQuerySchema>;
 export type AnalyticsResponse = z.infer<typeof analyticsResponseSchema>;
+export type BranchPayload = z.infer<typeof branchSchema>;
+export type ServicePayload = z.infer<typeof serviceSchema>;
+export type InviteStaffPayload = z.infer<typeof inviteStaffSchema>;
