@@ -59,6 +59,7 @@ export async function POST(req: Request) {
         serviceId,
         patientName,
         patientEmail,
+        patientId: userId,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
         status: "confirmed",
