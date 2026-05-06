@@ -5,17 +5,26 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export function ReviewStep({ 
   tenantSlug, 
   branchId, 
+  branchName,
+  branchAddress,
   serviceId, 
+  serviceName,
+  serviceDuration,
   date, 
   time 
 }: { 
   tenantSlug: string; 
   branchId: string; 
+  branchName: string;
+  branchAddress: string;
   serviceId: string;
+  serviceName: string;
+  serviceDuration: number;
   date: string;
   time: string;
 }) {
@@ -28,13 +37,14 @@ export function ReviewStep({
     setIsBooking(true);
 
     try {
-      // startTime in UTC: combine date and time then adjust if needed, 
-      // but for mock purposes we'll just send it as ISO combined.
       const startTime = new Date(`${date}T${time}:00`).toISOString();
-      const endTime = new Date(new Date(startTime).getTime() + 30 * 60000).toISOString(); // placeholder duration
+      const endTime = new Date(new Date(startTime).getTime() + serviceDuration * 60000).toISOString();
 
       const res = await fetch("/api/appointments/book", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           branchId,
           serviceId,
@@ -57,7 +67,7 @@ export function ReviewStep({
     }
   };
 
-  if (!isLoaded) return <div>Loading...</div>;
+  if (!isLoaded) return <div className="flex items-center justify-center py-20">Loading...</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 flex flex-col">
@@ -67,12 +77,24 @@ export function ReviewStep({
       </div>
       
       <div className="grid gap-6 p-8 rounded-3xl bg-slate-50 border border-slate-100 flex-1">
-        <div className="grid grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Service</p>
+            <p className="text-lg font-bold">{serviceName}</p>
+            <Badge variant="secondary" className="bg-primary/5 text-primary border-none font-bold uppercase tracking-widest text-[10px]">
+              {serviceDuration} min
+            </Badge>
+          </div>
+          <div className="space-y-1 md:text-right">
+            <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Location</p>
+            <p className="text-lg font-bold">{branchName}</p>
+            <p className="text-sm text-muted-foreground">{branchAddress}</p>
+          </div>
           <div className="space-y-1">
             <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Date</p>
             <p className="text-lg font-bold">{date}</p>
           </div>
-          <div className="space-y-1 text-right">
+          <div className="space-y-1 md:text-right">
             <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Time</p>
             <p className="text-lg font-bold">{time}</p>
           </div>
@@ -96,6 +118,9 @@ export function ReviewStep({
             Sign in to Complete Booking
           </Link>
         )}
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          By confirming, you agree to our Terms of Service and Privacy Policy.
+        </p>
       </div>
       
       <Link href={`/${tenantSlug}?step=time&serviceId=${serviceId}&branchId=${branchId}`} className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest gap-2">

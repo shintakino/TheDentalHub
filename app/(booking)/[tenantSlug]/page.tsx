@@ -40,6 +40,8 @@ export default async function BookingPage({
 
   const currentStepIndex = steps.findIndex(s => s.id === step);
   const currentStepNum = currentStepIndex !== -1 ? currentStepIndex + 1 : 1;
+  const selectedService = services.find(s => s.id === serviceId);
+  const selectedBranch = branches.find(b => b.id === effectiveBranchId);
 
   return (
     <div className="max-w-4xl mx-auto space-y-12">
@@ -90,11 +92,15 @@ export default async function BookingPage({
             serviceId={serviceId} 
           />
         )}
-        {step === "review" && effectiveBranchId && serviceId && date && time && (
+        {step === "review" && selectedBranch && selectedService && date && time && (
           <ReviewStep 
             tenantSlug={tenantSlug}
-            branchId={effectiveBranchId}
-            serviceId={serviceId}
+            branchId={selectedBranch.id}
+            branchName={selectedBranch.name}
+            branchAddress={selectedBranch.address}
+            serviceId={selectedService.id}
+            serviceName={selectedService.name}
+            serviceDuration={selectedService.duration}
             date={date}
             time={time}
           />
