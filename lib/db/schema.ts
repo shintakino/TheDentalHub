@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, jsonb, integer } from "drizzle-orm/pg-core";
 
 export const clinics = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -19,6 +19,9 @@ export const branches = pgTable("branches", {
   tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
   name: text("name").notNull(),
   address: text("address"),
+  timezone: text("timezone").default("UTC").notNull(),
+  operatingHoursStart: text("operating_hours_start").default("09:00").notNull(),
+  operatingHoursEnd: text("operating_hours_end").default("17:00").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -38,6 +41,7 @@ export const staff = pgTable("staff", {
   userId: text("user_id").notNull(), // Clerk user ID
   name: text("name").notNull(),
   role: text("role").notNull(), // 'admin', 'dentist', 'receptionist', etc.
+  targetDailyHours: integer("target_daily_hours").default(8).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
