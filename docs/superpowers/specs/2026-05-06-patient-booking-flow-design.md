@@ -48,4 +48,4 @@ Deliver a frictionless, multi-step appointment booking experience for patients. 
 ## Testing Strategy
 - **Unit Tests**: Test `generateSlots` with various edge cases (buffer times, overlapping appointments).
 - **Integration Tests**: Test the booking API for concurrency (simultaneous booking attempts for the same slot).
-- **E2E Tests**: Walk through the wizard from Step 1 to Success page.
+- **E2E Tests**: Walk through the wizard from Step 1 to the success page at `app/(booking)/[tenantSlug]/success/[id]/page.tsx`.

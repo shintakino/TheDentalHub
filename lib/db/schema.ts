@@ -92,3 +92,20 @@ export const clinicalNotes = pgTable("clinical_notes", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const communicationTypeEnum = ["email", "sms"] as const;
+export type CommunicationType = typeof communicationTypeEnum[number];
+
+export const communicationsLog = pgTable("communications_log", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
+  appointmentId: uuid("appointment_id").notNull().references(() => appointments.id, { onDelete: 'cascade' }),
+  type: text("type", { enum: communicationTypeEnum }).notNull(),
+  recipient: text("recipient").notNull(),
+  subject: text("subject"),
+  templateName: text("template_name").notNull(),
+  providerId: text("provider_id"), // ID from Resend/Twilio
+  status: text("status").notNull(), // 'sent', 'failed', etc.
+  error: text("error"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

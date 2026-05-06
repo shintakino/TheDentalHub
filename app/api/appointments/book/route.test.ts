@@ -13,6 +13,8 @@ describe("Atomic Locking in bookAppointment", () => {
       branchId: "branch-1",
       serviceId: "srv_1",
       patientId: "pat_1",
+      patientName: "John Doe",
+      patientEmail: "john@example.com",
       startTime: "2026-05-10T13:00:00.000Z",
       endTime: "2026-05-10T13:30:00.000Z",
     };
@@ -49,6 +51,8 @@ describe("Atomic Locking in bookAppointment", () => {
       branchId: "branch-1",
       serviceId: "srv_1",
       patientId: "pat_1",
+      patientName: "John Doe",
+      patientEmail: "john@example.com",
       startTime: "2026-05-10T13:00:00.000Z",
       endTime: "2026-05-10T13:30:00.000Z",
     };
@@ -58,6 +62,8 @@ describe("Atomic Locking in bookAppointment", () => {
       branchId: "branch-1",
       serviceId: "srv_1",
       patientId: "pat_2",
+      patientName: "Jane Smith",
+      patientEmail: "jane@example.com",
       startTime: "2026-05-10T13:30:00.000Z",
       endTime: "2026-05-10T14:00:00.000Z",
     };

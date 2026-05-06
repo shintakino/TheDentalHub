@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 10: Clinic Operations Management
+- Feature 14: Patient Portal
 
 ## Current Goal
 
-- Implement Clinic Operations Management (Branches, Services, Staff Management)
+- Implement Patient Portal for managing appointments and personal info.
 
 ## Completed
 
@@ -28,6 +28,9 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Implemented Clinic Branding System (Identity, Appearance, Presence) (08-clinic-branding.md)
 - [x] Implemented Analytics Dashboard (MVP) (09-analytics-dashboard.md)
 - [x] Implemented Clinic Operations Management (Branches, Services, Staff) (10-clinic-operations.md)
+- [x] Implemented Patient Booking Flow (11-patient-booking-flow.md)
+- [x] Implemented Super Admin Dashboard (12-super-admin-dashboard.md)
+- [x] Implemented Communications & Notifications (Branded Email/SMS) (13-communications-notifications.md)
 
 ## In Progress
 
@@ -35,7 +38,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 11: TBD
+- Feature 14: Patient Portal
 
 
 ## Open Questions

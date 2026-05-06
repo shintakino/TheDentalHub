@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { mockDb } from "@/lib/db/mock-db";
+import { db } from "@/lib/db";
+import { appointments, branches } from "@/lib/db/schema";
+import { eq, and, or, lt, gt, lte, gte } from "drizzle-orm";
 import { z } from "zod";
+import { notificationTriggers } from "@/lib/notifications/triggers";
+import { after } from "next/server";
 
 const bookingSchema = z.object({
-  serviceId: z.string().uuid().or(z.string()),
-  branchId: z.string().uuid().or(z.string()),
+  serviceId: z.string().uuid(),
+  branchId: z.string().uuid(),
   startTime: z.string().datetime(),
   endTime: z.string().datetime(),
   patientName: z.string(),
@@ -26,29 +30,54 @@ export async function POST(req: Request) {
   const { serviceId, branchId, startTime, endTime, patientName, patientEmail } = validated.data;
 
   // Fetch branch to get tenantId
-  const branch = await mockDb.getBranchById(branchId);
+  const branch = await db.query.branches.findFirst({
+    where: eq(branches.id, branchId),
+  });
+  
   if (!branch) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
 
-  // Atomic check for availability
-  const isAvailable = await mockDb.isSlotAvailable(branchId, startTime, endTime);
-  if (!isAvailable) {
-    return NextResponse.json({ error: "Slot already booked" }, { status: 409 });
-  }
-
   try {
-    const appointment = await mockDb.bookAppointment({
-      tenantId: branch.tenantId,
-      branchId,
-      serviceId,
-      patientName,
-      patientEmail,
-      patientId: userId,
-      startTime,
-      endTime,
+    const appointment = await db.transaction(async (tx) => {
+      // Atomic check for availability
+      const conflicting = await tx.query.appointments.findFirst({
+        where: and(
+          eq(appointments.branchId, branchId),
+          eq(appointments.status, "confirmed"),
+          // Overlap condition: (start1 < end2) AND (end1 > start2)
+          lt(appointments.startTime, new Date(endTime)),
+          gt(appointments.endTime, new Date(startTime))
+        ),
+      });
+
+      if (conflicting) {
+        throw new Error("Slot already booked");
+      }
+
+      const [newAppointment] = await tx.insert(appointments).values({
+        tenantId: branch.tenantId,
+        branchId,
+        serviceId,
+        patientName,
+        patientEmail,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        status: "confirmed",
+      }).returning();
+
+      return newAppointment;
+    });
+
+    // Trigger notification asynchronously
+    after(async () => {
+      try {
+        await notificationTriggers.triggerBookingConfirmation(appointment.id);
+      } catch (err) {
+        console.error("Failed to trigger booking confirmation:", err);
+      }
     });
 
     return NextResponse.json({ appointment });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 409 });
+    return NextResponse.json({ error: err.message }, { status: err.message === "Slot already booked" ? 409 : 500 });
   }
 }
