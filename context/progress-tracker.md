@@ -31,6 +31,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Implemented Patient Booking Flow (11-patient-booking-flow.md)
 - [x] Implemented Super Admin Dashboard (12-super-admin-dashboard.md)
 - [x] Implemented Communications & Notifications (Branded Email/SMS) (13-communications-notifications.md)
+- [x] Implemented Patient Portal (14-patient-portal.md)
 
 ## In Progress
 
@@ -38,7 +39,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 14: Patient Portal
+- Feature 15: Clinic Discovery & Marketplace
 
 
 ## Open Questions
