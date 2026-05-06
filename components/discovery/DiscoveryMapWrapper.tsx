@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ClinicConfig, BranchConfig } from "@/lib/db/mock-db";
+import { MarketplaceResult } from "@/lib/marketplace/types";
 
 const DiscoveryMap = dynamic(
   () => import("./DiscoveryMap"),
@@ -12,9 +12,11 @@ const DiscoveryMap = dynamic(
 );
 
 interface DiscoveryMapWrapperProps {
-  clinics: (ClinicConfig & { branches: BranchConfig[] })[];
+  branches: MarketplaceResult[];
+  onSearch: (lat: number, lng: number) => void;
+  center?: [number, number];
 }
 
-export default function DiscoveryMapWrapper({ clinics }: DiscoveryMapWrapperProps) {
-  return <DiscoveryMap clinics={clinics} />;
+export default function DiscoveryMapWrapper({ branches, onSearch, center }: DiscoveryMapWrapperProps) {
+  return <DiscoveryMap branches={branches} onSearch={onSearch} center={center} />;
 }

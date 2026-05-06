@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { useEffect, useCallback } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { ClinicConfig, BranchConfig } from "@/lib/db/mock-db";
+import { MarketplaceResult } from "@/lib/marketplace/types";
 import Link from "next/link";
 
 // Fix Leaflet marker icon issue
@@ -22,32 +22,45 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface DiscoveryMapProps {
-  clinics: (ClinicConfig & { branches: BranchConfig[] })[];
+  branches: MarketplaceResult[];
+  onSearch: (lat: number, lng: number) => void;
+  center?: [number, number];
 }
 
-function MapUpdater({ clinics }: DiscoveryMapProps) {
+function MapEvents({ onSearch }: { onSearch: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    moveend: (e) => {
+      const center = e.target.getCenter();
+      onSearch(center.lat, center.lng);
+    },
+  });
+  return null;
+}
+
+function MapUpdater({ branches }: { branches: MarketplaceResult[] }) {
   const map = useMap();
 
   useEffect(() => {
-    if (clinics.length > 0) {
-      const bounds = L.latLngBounds(
-        clinics.flatMap((c) => c.branches.map((b) => [b.latitude, b.longitude] as [number, number]))
-      );
-      map.fitBounds(bounds, { padding: [50, 50] });
+    if (branches.length > 0) {
+      const validBranches = branches.filter(b => b.latitude && b.longitude);
+      if (validBranches.length > 0) {
+        const bounds = L.latLngBounds(
+          validBranches.map((b) => [parseFloat(b.latitude!), parseFloat(b.longitude!)] as [number, number])
+        );
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+      }
     }
-  }, [clinics, map]);
+  }, [branches, map]);
 
   return null;
 }
 
-export default function DiscoveryMap({ clinics }: DiscoveryMapProps) {
-  const center: [number, number] = [40.7128, -74.0060]; // Default to NY
-
+export default function DiscoveryMap({ branches, onSearch, center = [40.7128, -74.0060] }: DiscoveryMapProps) {
   return (
     <div className="w-full h-full relative z-0">
       <MapContainer 
         center={center} 
-        zoom={13} 
+        zoom={12} 
         className="w-full h-full"
         scrollWheelZoom={true}
       >
@@ -56,17 +69,19 @@ export default function DiscoveryMap({ clinics }: DiscoveryMapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {clinics.flatMap(clinic => 
-          clinic.branches.map(branch => (
-            <Marker key={branch.id} position={[branch.latitude, branch.longitude]}>
+        {branches.map(branch => {
+          if (!branch.latitude || !branch.longitude) return null;
+          return (
+            <Marker key={branch.id} position={[parseFloat(branch.latitude), parseFloat(branch.longitude)]}>
               <Popup className="clinic-popup">
                 <div className="p-2 min-w-[200px] space-y-3">
                   <div className="space-y-1">
-                    <h3 className="font-serif font-bold text-lg leading-tight">{clinic.name}</h3>
+                    <h3 className="font-serif font-bold text-lg leading-tight">{branch.clinicName}</h3>
+                    <p className="text-xs font-medium text-primary">{branch.branchName}</p>
                     <p className="text-xs text-muted-foreground">{branch.address}</p>
                   </div>
                   <Link 
-                    href={`/${clinic.subdomain}/book`}
+                    href={`/${branch.subdomain}/book?branchId=${branch.id}`}
                     className="block w-full text-center py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity"
                   >
                     Book Appointment
@@ -74,10 +89,11 @@ export default function DiscoveryMap({ clinics }: DiscoveryMapProps) {
                 </div>
               </Popup>
             </Marker>
-          ))
-        )}
+          );
+        })}
         
-        <MapUpdater clinics={clinics} />
+        <MapEvents onSearch={onSearch} />
+        <MapUpdater branches={branches} />
       </MapContainer>
       
       {/* Custom Leaflet overrides in style tag because Leaflet's z-index is problematic */}
