@@ -8,6 +8,16 @@ import { toast } from "sonner";
 import { AppointmentStateMachine } from "@/lib/appointments/state-machine";
 import { AppointmentStatus } from "@/lib/db/schema";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+
 interface Appointment {
   id: string;
   patientName: string;
@@ -18,6 +28,9 @@ interface Appointment {
 export function DailySchedule({ initialAppointments }: { initialAppointments: Appointment[] }) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [noteContent, setNoteContent] = useState("");
+  const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
+  const [activeApptId, setActiveApptId] = useState<string | null>(null);
 
   const handleStatusChange = async (id: string, newStatus: AppointmentStatus) => {
     setLoadingId(id);
@@ -39,6 +52,33 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
       toast.success(`Status updated to ${newStatus.replace("_", " ")}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update status";
+      toast.error(message);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!activeApptId || !noteContent.trim()) return;
+    
+    setLoadingId(activeApptId);
+    try {
+      const res = await fetch(`/api/appointments/${activeApptId}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: noteContent }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to add note");
+      }
+
+      toast.success("Clinical note added successfully");
+      setNoteContent("");
+      setIsNoteDialogOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to add note";
       toast.error(message);
     } finally {
       setLoadingId(null);
@@ -86,6 +126,19 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
                   </div>
                   
                   <div className="flex flex-wrap gap-3 sm:justify-end">
+                    {app.status === "in_progress" && (
+                      <Button 
+                        size="lg" 
+                        variant="outline" 
+                        className="text-slate-600 border-slate-200 hover:bg-slate-50 font-outfit font-medium px-8 transition-all active:scale-95"
+                        onClick={() => {
+                          setActiveApptId(app.id);
+                          setIsNoteDialogOpen(true);
+                        }}
+                      >
+                        Add Clinical Note
+                      </Button>
+                    )}
                     {validNextStates.includes("checked_in") && (
                       <Button size="lg" className="bg-sapphire hover:bg-blue-700 text-white font-outfit font-medium px-8 transition-all active:scale-95" disabled={loadingId === app.id} onClick={() => handleStatusChange(app.id, "checked_in")}>
                         Check In
@@ -113,6 +166,28 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
           })}
         </div>
       )}
+
+      <Dialog open={isNoteDialogOpen} onOpenChange={setIsNoteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] border-none shadow-[0_4px_32px_rgba(0,0,0,0.15)] bg-white font-outfit">
+          <DialogHeader>
+            <DialogTitle className="font-playfair text-2xl font-semibold text-obsidian">Clinical Note</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              placeholder="Enter treatment details, observations, or next steps..."
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              className="min-h-[150px] border-slate-200 focus:ring-sapphire focus:border-sapphire font-outfit text-base"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsNoteDialogOpen(false)} disabled={loadingId !== null}>Cancel</Button>
+            <Button className="bg-sapphire hover:bg-blue-700 text-white" onClick={handleAddNote} disabled={loadingId !== null || !noteContent.trim()}>
+              Save Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
