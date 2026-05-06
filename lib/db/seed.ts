@@ -34,6 +34,15 @@ async function main() {
     tenantId: testTenantId,
     name: "Downtown Main Branch",
     address: "123 Premium Dental Way, Suite 100",
+    operatingHours: [
+      { day: 1, open: "09:00", close: "17:00", active: true },
+      { day: 2, open: "09:00", close: "17:00", active: true },
+      { day: 3, open: "09:00", close: "17:00", active: true },
+      { day: 4, open: "09:00", close: "17:00", active: true },
+      { day: 5, open: "09:00", close: "17:00", active: true },
+      { day: 6, open: "09:00", close: "13:00", active: false },
+      { day: 0, open: "09:00", close: "13:00", active: false },
+    ],
   }).returning();
 
   console.log("Inserting test services...");
@@ -41,12 +50,12 @@ async function main() {
     {
       tenantId: testTenantId,
       name: "Initial Consultation",
-      duration: "30",
+      duration: 30,
     },
     {
       tenantId: testTenantId,
       name: "Deep Cleaning & Whitening",
-      duration: "60",
+      duration: 60,
     }
   ]).returning();
 

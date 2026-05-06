@@ -47,7 +47,7 @@ export const analyticsResponseSchema = z.object({
 export const branchSchema = z.object({
   name: z.string().min(1, "Name is required"),
   address: z.string().optional(),
-  timezone: z.string().default("UTC"),
+  timezone: z.string().min(1, "Timezone is required"),
   operatingHours: z.array(z.object({
     day: z.number().min(0).max(6),
     open: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
