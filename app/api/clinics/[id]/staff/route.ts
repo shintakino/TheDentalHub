@@ -28,6 +28,38 @@ export async function GET(
       where: eq(staff.tenantId, tenantId),
     });
 
+    // Auto-sync: Check for members in Clerk that are NOT in our DB
+    for (const membership of memberships.data) {
+      const userId = membership.publicUserData?.userId;
+      if (!userId) continue;
+
+      const exists = staffInfo.some(s => s.userId === userId);
+      if (!exists) {
+        // Create local record
+        await db.insert(staff).values({
+          tenantId,
+          userId,
+          name: (membership.publicUserData?.firstName || "") + " " + (membership.publicUserData?.lastName || ""),
+          role: membership.role === "org:admin" ? "admin" : "dentist", // Default role mapping
+          targetDailyHours: 8,
+          updatedAt: new Date(),
+        });
+        
+        // Refresh staffInfo for the final mapping if we added someone
+        // Or just push to local staffInfo array if we want to avoid another query
+        staffInfo.push({
+          id: "", // We don't have the generated UUID here easily without returning, but we only need it for the find
+          tenantId,
+          userId,
+          name: (membership.publicUserData?.firstName || "") + " " + (membership.publicUserData?.lastName || ""),
+          role: membership.role === "org:admin" ? "admin" : "dentist",
+          targetDailyHours: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as any);
+      }
+    }
+
     const staffList = memberships.data.map((membership) => {
       const dbInfo = staffInfo.find((s) => s.userId === membership.publicUserData?.userId);
       return {
