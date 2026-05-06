@@ -45,6 +45,9 @@
     --color-sidebar-accent-foreground: #0A1120;
     --color-sidebar-border: #E2E8F0;
     --color-sidebar-ring: #0047FF;
+
+    --color-brand-primary: var(--brand-primary);
+    --color-brand-secondary: var(--brand-secondary);
     
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
@@ -97,6 +100,9 @@
     --sidebar-accent-foreground: #0A1120;
     --sidebar-border: #E2E8F0;
     --sidebar-ring: #0047FF;
+
+    --brand-primary: #0047FF;
+    --brand-secondary: #F1F5F9;
 }
 
 .dark {
