@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 14: Patient Portal
+- Feature 15: Clinic Discovery & Marketplace
 
 ## Current Goal
 
-- Implement Patient Portal for managing appointments and personal info.
+- Implement Clinic Discovery Marketplace with map-based search and "Next Available" slot preview.
 
 ## Completed
 
@@ -35,7 +35,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- (Ready for next phase)
+- Feature 15: Clinic Discovery & Marketplace (Task 1: API Endpoint)
 
 ## Next Up
 

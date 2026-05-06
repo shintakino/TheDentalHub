@@ -6,7 +6,9 @@ import DiscoveryMapWrapper from "@/components/discovery/DiscoveryMapWrapper";
 import { MarketplaceResult } from "@/lib/marketplace/types";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function DiscoveryPage() {
+import { Suspense } from "react";
+
+function DiscoveryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -119,5 +121,13 @@ export default function DiscoveryPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function DiscoveryPage() {
+  return (
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center">Loading marketplace...</div>}>
+      <DiscoveryContent />
+    </Suspense>
   );
 }
