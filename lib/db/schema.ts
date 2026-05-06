@@ -20,8 +20,7 @@ export const branches = pgTable("branches", {
   name: text("name").notNull(),
   address: text("address"),
   timezone: text("timezone").default("UTC").notNull(),
-  operatingHoursStart: text("operating_hours_start").default("09:00").notNull(),
-  operatingHoursEnd: text("operating_hours_end").default("17:00").notNull(),
+  operatingHours: jsonb("operating_hours").$type<{ day: number; open: string; close: string; active: boolean }[]>().default([]).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -30,7 +29,7 @@ export const services = pgTable("services", {
   id: uuid("id").defaultRandom().primaryKey(),
   tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
   name: text("name").notNull(),
-  duration: text("duration").notNull(), // Interval or minutes, storing as text for simplicity
+  duration: integer("duration").notNull(), // Duration in minutes
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
