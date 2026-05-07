@@ -1,11 +1,11 @@
 import { Resend } from "resend";
-import twilio from "twilio";
+import twilio, { Twilio } from "twilio";
 import { db } from "@/lib/db";
 import { communicationsLog } from "@/lib/db/schema";
 import { SendEmailOptions, SendSMSOptions } from "./types";
 
 let resendClient: Resend | null = null;
-let twilioClient: any = null;
+let twilioClient: Twilio | null = null;
 
 const getResend = () => {
   if (!resendClient) {

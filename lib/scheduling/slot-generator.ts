@@ -31,7 +31,7 @@ export interface SlotGeneratorParams {
   bookedAppointments: Appointment[];
   maxCapacity: number;
   staffAssignments: StaffAssignment[];
-  overrides: Override[];
+  overrides?: Override[];
 }
 
 export interface AvailableSlot {

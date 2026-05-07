@@ -4,13 +4,14 @@ import { eq, and, gte, lte, ne } from "drizzle-orm";
 import { generateSlots } from "./slot-generator";
 import { startOfDay, endOfDay } from "date-fns";
 import { toDate } from "date-fns-tz";
+import { Suggestion } from "@/lib/validations";
 
 export async function getNextBestSlots(
   tenantId: string,
   currentBranchId: string,
   date: string,
   serviceId: string
-) {
+): Promise<Suggestion[]> {
   // 1. Get all branches for this tenant except current
   const allBranches = await db.query.branches.findMany({
     where: and(
@@ -23,7 +24,7 @@ export async function getNextBestSlots(
   // 2. Sort by distance (if we had lat/lng, we'd use Haversine, but for now we'll just take the first few)
   // In a real app, we'd use the current branch's lat/lng to sort.
   
-  const suggestions = [];
+  const suggestions: Suggestion[] = [];
 
   for (const branch of allBranches.slice(0, 3)) { // Limit to 3 alternative branches
     const dayOfWeek = new Date(date).getDay();
