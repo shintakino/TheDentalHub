@@ -29,14 +29,21 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Implemented Clinic Onboarding Flow (16-clinic-onboarding-flow.md)
 - [x] Implemented Development Seeding & Mock Data Strategy (18-development-seeding-strategy.md)
 - [x] Implemented Patient Sidebar Expansion (Medical Records, Notifications, Settings) (19-patient-sidebar-expansion.md)
+- [x] Implemented Waitlist & Walk-in Management (20-waitlist-management.md)
+- [x] Created Waitlist & Walk-in Management specification (20-waitlist-management.md)
+- [x] Created Clinic Owner Dashboard Enhancements specification (21-owner-dashboard-enhancements.md)
+- [x] Implemented Clinic Owner Dashboard Enhancements (21-owner-dashboard-enhancements.md)
+- [x] Created Multi-Branch Management specification (22-multi-branch-management.md)
+- [x] Created Advanced Resource Management specification (23-advanced-resource-management.md)
+- [x] Created Operational Resiliency & Monitoring specification (24-operational-resiliency.md)
+- [x] Created Cross-Branch Intelligence specification (25-cross-branch-intelligence.md)
 - [x] Fixed Issue 1: Unreachable Clinic Discovery Map (Marketplace)
 - [x] Fixed Issue 2: Booking Failure (Migrated Booking Flow to real DB)
+- [x] Implemented Multi-Branch Management (22-multi-branch-management.md)
 
 ## In Progress
 
 None.
-
-
 
 ## Open Questions
 

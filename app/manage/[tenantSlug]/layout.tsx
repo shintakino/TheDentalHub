@@ -21,7 +21,7 @@ export default async function TenantDashboardLayout({
 
   // If they have an active org but are trying to access a different one, redirect to theirs
   if (orgId && orgId !== resolvedParams.tenantSlug) {
-    redirect(`/${orgId}/overview`);
+    redirect(`/manage/${orgId}/overview`);
   }
 
   // If they have NO active org, they shouldn't be here (unless they are super admin, but that's different flow)

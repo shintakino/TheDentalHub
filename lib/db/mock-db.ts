@@ -24,11 +24,11 @@ export interface BranchConfig {
   id: string;
   tenantId: string;
   name: string;
-  address: string;
+  address: string | null;
   timezone: string;
   operatingHours: { day: number; open: string; close: string; active: boolean }[];
-  latitude: number;
-  longitude: number;
+  latitude: number | string | null;
+  longitude: number | string | null;
 }
 
 export interface ClinicConfig {
@@ -154,7 +154,7 @@ export const mockDb = {
       results = results.filter(r => 
         r.name.toLowerCase().includes(q) || 
         r.description?.toLowerCase().includes(q) ||
-        r.branches.some(b => b.name.toLowerCase().includes(q) || b.address.toLowerCase().includes(q))
+        r.branches.some(b => b.name.toLowerCase().includes(q) || b.address?.toLowerCase().includes(q))
       );
     }
 

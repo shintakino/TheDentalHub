@@ -20,3 +20,10 @@ export async function getGlobalAuditLogs() {
     .orderBy(sql`${auditLogs.createdAt} DESC`)
     .limit(100);
 }
+
+export async function getBranchesByTenantId(tenantId: string) {
+  return await db.select()
+    .from(branches)
+    .where(eq(branches.tenantId, tenantId))
+    .orderBy(branches.name);
+}

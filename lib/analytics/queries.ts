@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { appointments, staff } from "@/lib/db/schema";
+import { appointments, staff, waitlistEntries } from "@/lib/db/schema";
 import { and, eq, gte, lte, sql, ne } from "drizzle-orm";
 import { cache } from "react";
 
@@ -96,12 +96,31 @@ export const getAnalyticsOverview = cache(async (tenantId: string, startDate: st
     .groupBy(sql`to_char(start_time, 'YYYY-MM-DD')`)
     .orderBy(sql`to_char(start_time, 'YYYY-MM-DD')`);
 
+  // 6. Waitlist Stats
+  const [waitlistStats] = await db
+    .select({
+      total: sql<number>`count(*)`,
+      booked: sql<number>`count(*) filter (where status = 'booked')`
+    })
+    .from(waitlistEntries)
+    .where(
+      and(
+        eq(waitlistEntries.tenantId, tenantId),
+        gte(waitlistEntries.createdAt, start),
+        lte(waitlistEntries.createdAt, end)
+      )
+    );
+
+  const waitlistConversionRate = waitlistStats.total > 0 ? waitlistStats.booked / waitlistStats.total : 0;
+
   return {
     summary: {
       totalBookings: Number(bookingsCount.count),
       noShowRate,
       avgUtilization: Math.min(avgUtilization, 1), // Cap at 100%
       peakHour: peakHours[0]?.hour || "N/A",
+      waitlistEntries: Number(waitlistStats.total),
+      waitlistConversionRate,
     },
     timeSeries: timeSeries.map(t => ({
       date: t.date,

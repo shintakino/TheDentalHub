@@ -42,6 +42,7 @@ export async function PATCH(
           latitude: coords.lat.toString(), 
           longitude: coords.lng.toString() 
         } : {}),
+        isActive: validation.data.isActive ?? true,
         updatedAt: new Date() 
       })
       .where(and(

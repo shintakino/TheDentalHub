@@ -53,7 +53,8 @@ export const branchSchema = z.object({
     open: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
     close: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
     active: z.boolean()
-  }))
+  })),
+  isActive: z.boolean()
 });
 
 export const serviceSchema = z.object({
@@ -73,7 +74,19 @@ export const clinicOnboardingSchema = z.object({
   }),
 });
 
+export const waitlistEntrySchema = z.object({
+  branchId: z.string().uuid("Invalid branch ID"),
+  serviceId: z.string().uuid("Invalid service ID"),
+  patientName: z.string().min(1, "Patient name is required"),
+  patientPhone: z.string().min(5, "Valid phone number is required"),
+  patientEmail: z.string().email("Invalid email").optional().nullable(),
+  patientId: z.string().optional().nullable(),
+  preferredDays: z.array(z.string()).default([]),
+  status: z.enum(["waiting", "notified", "booked", "cancelled", "expired"]).optional().default("waiting")
+});
+
 export type ClinicOnboardingPayload = z.infer<typeof clinicOnboardingSchema>;
+export type WaitlistEntryPayload = z.infer<typeof waitlistEntrySchema>;
 
 export type GetSlotsQuery = z.infer<typeof getSlotsQuerySchema>;
 export type BookAppointmentPayload = z.infer<typeof bookAppointmentSchema>;

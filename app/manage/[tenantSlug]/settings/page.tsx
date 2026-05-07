@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTenantId } from "@/lib/db/tenant";
-import { BranchesTab } from "@/components/dashboard/settings/BranchesTab";
+import { BranchManager } from "@/components/dashboard/BranchManager";
 import { ServicesTab } from "@/components/dashboard/settings/ServicesTab";
 import { StaffTab } from "@/components/dashboard/settings/StaffTab";
 
@@ -37,7 +37,7 @@ export default async function SettingsPage() {
         </TabsList>
         
         <TabsContent value="branches" className="mt-6 border-none p-0 outline-none">
-          <BranchesTab tenantId={tenantId} />
+          <BranchManager tenantId={tenantId} />
         </TabsContent>
         <TabsContent value="services" className="mt-6 border-none p-0 outline-none">
           <ServicesTab tenantId={tenantId} />

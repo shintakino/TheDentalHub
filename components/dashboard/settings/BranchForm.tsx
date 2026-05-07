@@ -16,6 +16,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { OperatingHoursEditor } from "./OperatingHoursEditor";
 
+import { BranchMapPreview } from "./BranchMapPreview";
+import { Switch } from "@/components/ui/switch";
+
 interface BranchFormProps {
   tenantId: string;
   initialData?: any;
@@ -40,18 +43,22 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
       address: initialData.address || "",
       timezone: initialData.timezone,
       operatingHours: initialData.operatingHours,
+      isActive: initialData.isActive ?? true,
     } : {
       name: "",
       address: "",
       timezone: "UTC",
       operatingHours: defaultOperatingHours,
+      isActive: true,
     },
   });
+
+  const address = form.watch("address");
 
   const onSubmit = async (values: BranchPayload) => {
     try {
       const url = initialData 
-        ? `/api/clinics/${tenantId}/branches/${initialData.id}`
+        ? `/api/branches/${initialData.id}`
         : `/api/clinics/${tenantId}/branches`;
       
       const response = await fetch(url, {
@@ -64,7 +71,7 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
         throw new Error(data.error || "Failed to save branch");
       }
 
-      toast.success(initialData ? "Branch updated" : "Branch created");
+      toast.success(initialData ? "Branch configuration updated" : "New branch registered");
       onSuccess();
     } catch (error: any) {
       toast.error(error.message);
@@ -74,6 +81,27 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <div className="space-y-0.5">
+            <FormLabel className="text-base font-outfit text-obsidian">Branch Status</FormLabel>
+            <p className="text-sm text-slate-500 font-outfit">Allow this branch to accept appointments.</p>
+          </div>
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
         <div className="grid grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -103,19 +131,22 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="font-outfit text-slate-600">Address</FormLabel>
-              <FormControl>
-                <Input placeholder="123 Dental St, Medical District" className="rounded-xl h-11 border-slate-200 focus:border-primary transition-all" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-outfit text-slate-600">Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="123 Dental St, Medical District" className="rounded-xl h-11 border-slate-200 focus:border-primary transition-all" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <BranchMapPreview address={address || ""} />
+        </div>
 
         <div className="space-y-4">
           <FormLabel className="font-outfit text-slate-600">Operating Hours</FormLabel>

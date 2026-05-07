@@ -116,7 +116,7 @@ export const notificationSender = {
 
   async logCommunication(log: {
     tenantId: string;
-    appointmentId: string;
+    appointmentId?: string;
     type: "email" | "sms";
     recipient: string;
     subject?: string;
@@ -128,7 +128,7 @@ export const notificationSender = {
     try {
       await db.insert(communicationsLog).values({
         tenantId: log.tenantId,
-        appointmentId: log.appointmentId,
+        appointmentId: log.appointmentId ?? null,
         type: log.type,
         recipient: log.recipient,
         subject: log.subject,

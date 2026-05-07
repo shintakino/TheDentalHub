@@ -12,7 +12,7 @@ export const NotificationPayloadSchema = z.object({
   branchName: z.string().optional(),
   branchAddress: z.string().optional(),
   serviceName: z.string(),
-  appointmentId: z.string().uuid(),
+  appointmentId: z.string().uuid().optional(),
   tenantId: z.string(),
 });
 
@@ -23,13 +23,13 @@ export interface SendEmailOptions {
   subject: string;
   template: React.ReactElement;
   templateName: string;
-  appointmentId: string;
+  appointmentId?: string;
   tenantId: string;
 }
 
 export interface SendSMSOptions {
   to: string;
   message: string;
-  appointmentId: string;
+  appointmentId?: string;
   tenantId: string;
 }

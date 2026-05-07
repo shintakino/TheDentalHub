@@ -45,7 +45,7 @@ export default function ClinicOnboardingPage() {
       
       toast.success("Clinic created successfully!");
       // Redirect to the settings page
-      router.push(`/${organization.id}/settings`);
+      router.push(`/manage/${organization.id}/settings`);
     } catch (error: any) {
       console.error(error);
       toast.error(error.errors?.[0]?.longMessage || "Failed to create clinic. Please try again.");

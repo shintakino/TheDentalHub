@@ -3,11 +3,12 @@ import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)", "/api/marketplace/search(.*)", "/search(.*)", "/"]);
 const isDashboardRoute = createRouteMatcher([
-  "/:tenantId/overview(.*)", 
-  "/:tenantId/schedule(.*)", 
-  "/:tenantId/patients(.*)", 
-  "/:tenantId/analytics(.*)", 
-  "/:tenantId/settings(.*)"
+  "/manage/:tenantId/overview(.*)", 
+  "/manage/:tenantId/schedule(.*)", 
+  "/manage/:tenantId/patients(.*)", 
+  "/manage/:tenantId/analytics(.*)", 
+  "/manage/:tenantId/settings(.*)",
+  "/manage/:tenantId/branding(.*)"
 ]);
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
@@ -21,7 +22,7 @@ export const proxy = clerkMiddleware(async (auth, req) => {
         return NextResponse.redirect(new URL("/admin", req.url));
       }
       if (authObj.orgId) {
-        return NextResponse.redirect(new URL(`/${authObj.orgId}/overview`, req.url));
+        return NextResponse.redirect(new URL(`/manage/${authObj.orgId}/overview`, req.url));
       }
       // If neither super admin nor org member, assume patient
       return NextResponse.redirect(new URL("/dashboard", req.url));

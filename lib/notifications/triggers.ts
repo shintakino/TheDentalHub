@@ -1,14 +1,53 @@
 import React from "react";
 import { db } from "@/lib/db";
-import { appointments, clinics, branches, services } from "@/lib/db/schema";
+import { appointments, clinics, branches, services, waitlistEntries } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { format } from "date-fns";
 import { notificationSender } from "./sender";
 import BookingConfirmationEmail from "@/emails/BookingConfirmation";
 import AppointmentReminderEmail from "@/emails/AppointmentReminder";
 import CancellationNoticeEmail from "@/emails/CancellationNotice";
+import WaitlistOfferEmail from "@/emails/WaitlistOffer";
 
 export const notificationTriggers = {
+  async triggerWaitlistOffer(entryId: string, appointmentDate: Date) {
+    const entry = await db.query.waitlistEntries.findFirst({
+      where: eq(waitlistEntries.id, entryId),
+      with: {
+        branch: true,
+        service: true,
+      }
+    });
+
+    if (!entry || !entry.patientEmail) return;
+
+    const clinic = await db.query.clinics.findFirst({ 
+      where: eq(clinics.tenantId, entry.tenantId) 
+    });
+
+    if (!clinic) return;
+
+    const to = entry.patientEmail;
+
+    await notificationSender.sendEmail({
+      to,
+      subject: `New opening at ${clinic.name}`,
+      template: React.createElement(WaitlistOfferEmail, {
+        patientName: entry.patientName,
+        clinicName: clinic.name,
+        clinicLogoUrl: clinic.logoUrl,
+        primaryColor: clinic.primaryColor || "#0047FF",
+        appointmentDate: format(appointmentDate, "EEEE, MMMM do, yyyy"),
+        appointmentTime: format(appointmentDate, "h:mm a"),
+        branchName: entry.branch.name,
+        branchAddress: entry.branch.address || "",
+        serviceName: entry.service.name,
+      }),
+      templateName: "WaitlistOffer",
+      tenantId: entry.tenantId,
+    });
+  },
+
   async triggerBookingConfirmation(appointmentId: string) {
     const data = await this.getAppointmentNotificationData(appointmentId);
     if (!data || !data.appointment.patientEmail) return;

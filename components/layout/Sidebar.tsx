@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { 
   LayoutDashboard, 
   CalendarDays, 
@@ -11,7 +11,8 @@ import {
   Menu,
   Search,
   FileText,
-  Bell
+  Bell,
+  Palette
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,11 +23,12 @@ import { useAuth, useOrganization } from "@clerk/nextjs";
 
 const navigation = [
   { name: "Dashboard", href: "/overview", icon: LayoutDashboard },
-  { name: "Find a Clinic", href: "/search", icon: Search, isRoot: true },
   { name: "Schedule", href: "/schedule", icon: CalendarDays },
   { name: "Patients", href: "/patients", icon: Users },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Branding", href: "/branding", icon: Palette },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Find a Clinic", href: "/search", icon: Search, isRoot: true },
 ];
 
 const patientNavigation = [
@@ -39,17 +41,25 @@ const patientNavigation = [
 
 function NavLinks({ onItemClick }: { onItemClick?: () => void }) {
   const pathname = usePathname();
+  const params = useParams();
   const { has } = useAuth();
   const { organization } = useOrganization();
-  const orgId = organization?.id || "";
   
-  const currentNavigation = orgId ? navigation : patientNavigation;
+  const tenantSlug = (params?.tenantSlug as string) || organization?.id || "";
+  const isPatientView = !tenantSlug || pathname.startsWith("/dashboard") || pathname.startsWith("/records") || pathname.startsWith("/notifications");
+  
+  const currentNavigation = !isPatientView ? navigation : patientNavigation;
 
   return (
     <nav className="flex flex-col gap-6 mt-8 px-6">
       {currentNavigation.map((item) => {
-        const fullHref = (orgId && !(item as any).isRoot) ? `/${orgId}${item.href}` : item.href;
-        const isActive = pathname === fullHref;
+        const isRoot = (item as any).isRoot;
+        const fullHref = (!isRoot && tenantSlug) ? `/manage/${tenantSlug}${item.href}` : item.href;
+        
+        // Exact match for dashboard/overview, startsWith for others to handle sub-routes
+        const isActive = (item.href === "/overview" || item.href === "/dashboard") 
+          ? pathname === fullHref 
+          : pathname.startsWith(fullHref) && fullHref !== "/";
         
         const link = (
           <Link
@@ -75,7 +85,7 @@ function NavLinks({ onItemClick }: { onItemClick?: () => void }) {
           </Link>
         );
 
-        if (item.name === "Settings" && orgId) {
+        if (item.name === "Settings" && tenantSlug && !isRoot) {
           const isAdmin = has && has({ role: "org:admin" });
           if (!isAdmin) return null;
           return link;

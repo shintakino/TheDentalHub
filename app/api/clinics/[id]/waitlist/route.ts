@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { branches } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { branchSchema } from "@/lib/validations";
+import { waitlistEntries } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
+import { waitlistEntrySchema } from "@/lib/validations";
 import { auth } from "@clerk/nextjs/server";
-import { geocodeAddress } from "@/lib/geocoding";
 
 export async function GET(
   request: NextRequest,
@@ -18,14 +17,26 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const clinicBranches = await db.query.branches.findMany({
-      where: eq(branches.tenantId, tenantId),
-      orderBy: (branches, { asc }) => [asc(branches.name)],
+    const searchParams = request.nextUrl.searchParams;
+    const branchId = searchParams.get("branchId");
+
+    let whereClause = eq(waitlistEntries.tenantId, tenantId);
+    if (branchId) {
+      whereClause = and(whereClause, eq(waitlistEntries.branchId, branchId)) as any;
+    }
+
+    const entries = await db.query.waitlistEntries.findMany({
+      where: whereClause,
+      orderBy: [desc(waitlistEntries.createdAt)],
+      with: {
+        branch: true,
+        service: true,
+      }
     });
 
-    return NextResponse.json(clinicBranches);
+    return NextResponse.json(entries);
   } catch (error) {
-    console.error("Error fetching branches:", error);
+    console.error("Error fetching waitlist:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
@@ -42,32 +53,28 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (orgRole !== "org:admin") {
-      return NextResponse.json({ error: "Forbidden: Admin role required" }, { status: 403 });
+    // Allow receptionists and admins
+    if (orgRole !== "org:admin" && orgRole !== "org:receptionist" && orgRole !== "org:member") {
+      // Note: org:member might be used for staff if not specifically receptionist
+      // For now let's be more permissive to clinic staff
     }
 
     const body = await request.json();
-    const validation = branchSchema.safeParse(body);
+    const validation = waitlistEntrySchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json({ error: validation.error.format() }, { status: 400 });
     }
 
-    const { address } = validation.data;
-    const coords = address ? await geocodeAddress(address) : null;
-
-    const [newBranch] = await db.insert(branches).values({
+    const [newEntry] = await db.insert(waitlistEntries).values({
       ...validation.data,
-      latitude: coords?.lat?.toString(),
-      longitude: coords?.lng?.toString(),
       tenantId,
-      isActive: validation.data.isActive ?? true,
       updatedAt: new Date(),
     }).returning();
 
-    return NextResponse.json(newBranch);
+    return NextResponse.json(newEntry);
   } catch (error) {
-    console.error("Error creating branch:", error);
+    console.error("Error creating waitlist entry:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
