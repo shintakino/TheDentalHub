@@ -91,7 +91,7 @@ export const staffAssignmentSchema = z.object({
 export const serviceSchema = z.object({
   name: z.string().min(1, "Name is required"),
   duration: z.number().positive("Duration must be positive"),
-  price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format").default("0.00")
+  price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format")
 });
 
 export const inviteStaffSchema = z.object({
