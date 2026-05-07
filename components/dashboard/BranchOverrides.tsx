@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface Override {
@@ -163,17 +164,15 @@ export function BranchOverrides({ branchId, branchName }: { branchId: string, br
               <div className="space-y-2">
                 <Label>Start Date</Label>
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal rounded-xl",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
-                    </Button>
+                  <PopoverTrigger
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "w-full justify-start text-left font-normal rounded-xl",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
@@ -188,17 +187,15 @@ export function BranchOverrides({ branchId, branchName }: { branchId: string, br
               <div className="space-y-2">
                 <Label>End Date</Label>
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal rounded-xl",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
-                    </Button>
+                  <PopoverTrigger
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "w-full justify-start text-left font-normal rounded-xl",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar

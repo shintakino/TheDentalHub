@@ -44,7 +44,25 @@ import { BranchOverrides } from "./BranchOverrides";
 import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 
-// ...
+interface OperatingHour {
+  day: number;
+  open: string;
+  close: string;
+  active: boolean;
+}
+
+interface Branch {
+  id: string;
+  name: string;
+  address: string | null;
+  timezone: string;
+  operatingHours: OperatingHour[];
+  maxCapacity: number;
+  isActive: boolean;
+  latitude: string | null;
+  longitude: string | null;
+}
+
 export function BranchManager({ tenantId }: { tenantId: string }) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
