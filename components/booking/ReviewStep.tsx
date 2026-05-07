@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useUser, useOrganization } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -28,12 +28,19 @@ export function ReviewStep({
   date: string;
   time: string;
 }) {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded: userLoaded } = useUser();
+  const { organization, isLoaded: orgLoaded } = useOrganization();
   const router = useRouter();
   const [isBooking, setIsBooking] = useState(false);
 
+  const isManagement = organization?.id === tenantSlug;
+
   const confirmBooking = async () => {
     if (!user) return;
+    if (isManagement) {
+      toast.error("Management accounts cannot book appointments at their own clinic.");
+      return;
+    }
     setIsBooking(true);
 
     try {
@@ -60,17 +67,23 @@ export function ReviewStep({
 
       toast.success("Appointment confirmed!");
       router.push(`/${tenantSlug}/success/${data.appointment.id}`);
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to book";
+      toast.error(message);
     } finally {
       setIsBooking(false);
     }
   };
 
-  if (!isLoaded) return <div className="flex items-center justify-center py-20">Loading...</div>;
+  if (!userLoaded || !orgLoaded) return <div className="flex items-center justify-center py-20">Loading...</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 flex flex-col">
+      {isManagement && (
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 text-sm font-outfit">
+          <strong>Preview Mode:</strong> You are viewing your own clinic. Booking is disabled for management accounts.
+        </div>
+      )}
       <div className="space-y-2">
         <h2 className="text-2xl font-serif font-bold">Review Your Booking</h2>
         <p className="text-muted-foreground">Please confirm your appointment details.</p>
@@ -105,10 +118,10 @@ export function ReviewStep({
         {user ? (
           <button 
             onClick={confirmBooking}
-            disabled={isBooking}
-            className="w-full py-4 rounded-2xl bg-primary text-white text-lg font-bold shadow-xl shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50"
+            disabled={isBooking || isManagement}
+            className="w-full py-4 rounded-2xl bg-primary text-white text-lg font-bold shadow-xl shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isBooking ? "Confirming..." : "Confirm Appointment"}
+            {isBooking ? "Confirming..." : isManagement ? "Booking Unavailable" : "Confirm Appointment"}
           </button>
         ) : (
           <Link
