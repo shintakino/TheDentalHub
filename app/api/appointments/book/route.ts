@@ -6,6 +6,7 @@ import { eq, and, or, lt, gt, lte, gte } from "drizzle-orm";
 import { z } from "zod";
 import { notificationTriggers } from "@/lib/notifications/triggers";
 import { after } from "next/server";
+import { Forecaster } from "@/lib/intelligence/forecaster";
 
 const bookingSchema = z.object({
   serviceId: z.string().uuid(),
@@ -36,6 +37,9 @@ export async function POST(req: Request) {
   
   if (!branch) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
 
+  // Pre-calculate risk score
+  const prediction = await Forecaster.predictNoShowRisk(userId, new Date(startTime));
+
   try {
     const appointment = await db.transaction(async (tx) => {
       // Atomic check for availability
@@ -63,6 +67,7 @@ export async function POST(req: Request) {
         startTime: new Date(startTime),
         endTime: new Date(endTime),
         status: "confirmed",
+        riskScore: prediction.riskScore,
       }).returning();
 
       return newAppointment;
@@ -72,6 +77,12 @@ export async function POST(req: Request) {
     after(async () => {
       try {
         await notificationTriggers.triggerBookingConfirmation(appointment.id);
+        
+        // If high risk, trigger priority reminder immediately or schedule it
+        if (prediction.isHighRisk) {
+          console.log(`High risk detected for appointment ${appointment.id}. Action: ${prediction.suggestedAction}`);
+          // In a real system, we might schedule a specialized reminder here.
+        }
       } catch (err) {
         console.error("Failed to trigger booking confirmation:", err);
       }
