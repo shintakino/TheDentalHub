@@ -24,6 +24,7 @@ export const updateBrandingSchema = z.object({
 export const analyticsQuerySchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  branchId: z.string().uuid().optional(),
 });
 
 export const analyticsResponseSchema = z.object({
@@ -32,6 +33,8 @@ export const analyticsResponseSchema = z.object({
     noShowRate: z.number(),
     avgUtilization: z.number(),
     peakHour: z.string(),
+    waitlistEntries: z.number().optional(),
+    waitlistConversionRate: z.number().optional(),
   }),
   timeSeries: z.array(z.object({
     date: z.string(),
@@ -43,6 +46,25 @@ export const analyticsResponseSchema = z.object({
     count: z.number(),
   })),
 });
+
+export const comparativeMetricSchema = z.object({
+  branchId: z.string(),
+  branchName: z.string(),
+  bookingCount: z.number(),
+  utilization: z.number(),
+  maxCapacity: z.number(),
+});
+
+export const recommendationSchema = z.object({
+  type: z.enum(["staff_movement", "capacity_expansion", "marketing_push"]),
+  priority: z.enum(["high", "medium", "low"]),
+  title: z.string(),
+  description: z.string(),
+  action: z.string().optional(),
+});
+
+export type ComparativeMetric = z.infer<typeof comparativeMetricSchema>;
+export type Recommendation = z.infer<typeof recommendationSchema>;
 
 export const branchSchema = z.object({
   name: z.string().min(1, "Name is required"),

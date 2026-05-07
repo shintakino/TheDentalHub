@@ -18,8 +18,9 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const branchId = searchParams.get("branchId") || undefined;
 
-    const validation = analyticsQuerySchema.safeParse({ startDate, endDate });
+    const validation = analyticsQuerySchema.safeParse({ startDate, endDate, branchId });
     if (!validation.success) {
       return NextResponse.json({ error: validation.error.format() }, { status: 400 });
     }
@@ -27,7 +28,8 @@ export async function GET(request: NextRequest) {
     const data = await getAnalyticsOverview(
       tenantId,
       validation.data.startDate,
-      validation.data.endDate
+      validation.data.endDate,
+      validation.data.branchId
     );
 
     return NextResponse.json(data);
