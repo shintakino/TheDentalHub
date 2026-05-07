@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { branches, services, appointments, staffAssignments } from "@/lib/db/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { branches, services, appointments, staffAssignments, branchOverrides } from "@/lib/db/schema";
+import { eq, and, gte, lte, or } from "drizzle-orm";
 import { generateSlots } from "@/lib/scheduling/slot-generator";
 import { z } from "zod";
 import { startOfDay, endOfDay, parse } from "date-fns";
@@ -28,9 +28,11 @@ export async function GET(
   }
 
   const { date, serviceId } = validated.data;
+  const dayStart = startOfDay(new Date(date));
+  const dayEnd = endOfDay(new Date(date));
 
-  // Fetch branch, service, and staff assignments in parallel
-  const [branch, service, dayAssignments] = await Promise.all([
+  // Fetch branch, service, staff assignments, and overrides in parallel
+  const [branch, service, dayAssignments, activeOverrides] = await Promise.all([
     db.query.branches.findFirst({
       where: eq(branches.id, branchId),
     }),
@@ -43,15 +45,19 @@ export async function GET(
         eq(staffAssignments.dayOfWeek, new Date(date).getDay())
       ),
     }),
+    db.query.branchOverrides.findMany({
+      where: and(
+        eq(branchOverrides.branchId, branchId),
+        lte(branchOverrides.startDate, dayEnd),
+        gte(branchOverrides.endDate, dayStart)
+      )
+    })
   ]);
 
   if (!branch) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
   if (!service) return NextResponse.json({ error: "Service not found" }, { status: 404 });
 
   // Get booked appointments for this branch/date
-  const dayStart = startOfDay(new Date(date));
-  const dayEnd = endOfDay(new Date(date));
-
   const booked = await db.query.appointments.findMany({
     where: and(
       eq(appointments.branchId, branchId),
@@ -91,6 +97,11 @@ export async function GET(
     })),
     maxCapacity: branch.maxCapacity,
     staffAssignments: staffWorking,
+    overrides: activeOverrides.map(o => ({
+      startTime: o.startDate.toISOString(),
+      endTime: o.endDate.toISOString(),
+      isClosed: o.isClosed
+    })),
   });
 
   return NextResponse.json({ slots });

@@ -4,6 +4,7 @@ import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { getTenantId } from "@/lib/db/tenant";
 import { DailySchedule } from "@/components/dashboard/DailySchedule";
 import { WaitlistManager } from "@/components/dashboard/WaitlistManager";
+import { LivePulse } from "@/components/dashboard/LivePulse";
 import { KPISnapshot, QuickActions, ActivityFeed } from "@/components/dashboard/OverviewComponents";
 import { startOfDay, endOfDay } from "date-fns";
 
@@ -14,6 +15,8 @@ export default async function DashboardPage({
 }) {
   const { tenantSlug } = await params;
   const tenantId = await getTenantId();
+
+  // ... (rest of data fetching)
 
   // Fetch today's appointments for this tenant
   const today = new Date();
@@ -74,6 +77,14 @@ export default async function DashboardPage({
       </div>
 
       <QuickActions tenantSlug={tenantSlug} />
+      
+      <div className="mb-12">
+        <h2 className="text-xl font-bold mb-6 font-playfair text-obsidian flex items-center gap-2">
+          <span className="flex h-3 w-3 rounded-full bg-green-500 animate-pulse" />
+          Live Clinic Pulse
+        </h2>
+        <LivePulse />
+      </div>
       
       <KPISnapshot stats={stats} />
 

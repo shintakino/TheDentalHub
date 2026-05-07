@@ -27,3 +27,19 @@ export async function getBranchesByTenantId(tenantId: string) {
     .where(eq(branches.tenantId, tenantId))
     .orderBy(branches.name);
 }
+
+export async function getBranchOccupancy(tenantId: string) {
+  return await db.select({
+    branchId: branches.id,
+    branchName: branches.name,
+    maxCapacity: branches.maxCapacity,
+    currentOccupancy: sql<number>`(
+      SELECT count(*) 
+      FROM ${appointments} 
+      WHERE ${appointments.branchId} = ${branches.id} 
+      AND ${appointments.status} IN ('checked_in', 'in_progress')
+    )`.mapWith(Number),
+  })
+  .from(branches)
+  .where(eq(branches.tenantId, tenantId));
+}

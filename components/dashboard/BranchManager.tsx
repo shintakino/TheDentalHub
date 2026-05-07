@@ -40,33 +40,17 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { BranchForm } from "./settings/BranchForm";
+import { BranchOverrides } from "./BranchOverrides";
 import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 
-interface OperatingHour {
-  day: number;
-  open: string;
-  close: string;
-  active: boolean;
-}
-
-interface Branch {
-  id: string;
-  name: string;
-  address: string | null;
-  timezone: string;
-  operatingHours: OperatingHour[];
-  maxCapacity: number;
-  isActive: boolean;
-  latitude: string | null;
-  longitude: string | null;
-}
-
+// ...
 export function BranchManager({ tenantId }: { tenantId: string }) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [managingOverrides, setManagingOverrides] = useState<Branch | null>(null);
 
   const fetchBranches = async () => {
     try {
@@ -331,6 +315,13 @@ export function BranchManager({ tenantId }: { tenantId: string }) {
                               <Copy className="w-4 h-4 text-primary" />
                               Sync Hours to Others
                             </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => setManagingOverrides(branch)} 
+                              className="gap-2 cursor-pointer py-2.5 rounded-lg"
+                            >
+                              <Clock className="w-4 h-4 text-amber-500" />
+                              Manage Disruptions
+                            </DropdownMenuItem>
                             <Link href={`/manage/branches/${branch.id}`} className="block">
                               <DropdownMenuItem className="gap-2 cursor-pointer py-2.5 rounded-lg">
                                 <ExternalLink className="w-4 h-4" />
@@ -379,6 +370,24 @@ export function BranchManager({ tenantId }: { tenantId: string }) {
               }} 
             />
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!managingOverrides} onOpenChange={(open) => !open && setManagingOverrides(null)}>
+        <DialogContent className="sm:max-w-[700px] rounded-3xl border-none shadow-2xl p-8 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-playfair font-bold text-obsidian">
+              Operational Resiliency
+            </DialogTitle>
+            <DialogDescription className="font-outfit text-slate-500">
+              Manage temporary closures and emergency blackouts for {managingOverrides?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          {managingOverrides && (
+            <div className="mt-6">
+              <BranchOverrides branchId={managingOverrides.id} branchName={managingOverrides.name} />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
