@@ -94,6 +94,31 @@ export const waitlistEntrySchema = z.object({
   status: z.enum(["waiting", "notified", "booked", "cancelled", "expired"]).optional().default("waiting")
 });
 
+export const branchOverrideSchema = z.object({
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  reason: z.string().min(1, "Reason is required"),
+  isClosed: z.boolean().default(true)
+});
+
+export const suggestionSchema = z.object({
+  branchId: z.string().uuid(),
+  branchName: z.string(),
+  distance: z.string(),
+  nextSlot: z.string().datetime(),
+});
+
+export const occupancySchema = z.object({
+  branchId: z.string().uuid(),
+  branchName: z.string(),
+  maxCapacity: z.number(),
+  currentOccupancy: z.number(),
+});
+
+export type BranchOverridePayload = z.infer<typeof branchOverrideSchema>;
+export type Suggestion = z.infer<typeof suggestionSchema>;
+export type Occupancy = z.infer<typeof occupancySchema>;
+
 export type ClinicOnboardingPayload = z.infer<typeof clinicOnboardingSchema>;
 export type WaitlistEntryPayload = z.infer<typeof waitlistEntrySchema>;
 

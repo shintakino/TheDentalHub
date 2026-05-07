@@ -4,9 +4,22 @@ dotenv.config({ path: ".env.local" });
 import { createClerkClient } from "@clerk/nextjs/server";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { clinics, branches, services, staff, appointments, clinicalNotes, auditLogs, communicationsLog } from "./schema";
+import { 
+  clinics, 
+  branches, 
+  services, 
+  staff, 
+  appointments, 
+  clinicalNotes, 
+  auditLogs, 
+  communicationsLog,
+  waitlistEntries,
+  branchOverrides,
+  staffAssignments
+} from "./schema";
 import { eq } from "drizzle-orm";
-import { addDays, startOfDay, setHours, setMinutes, subDays } from "date-fns";
+import { addDays, startOfDay, setHours, setMinutes, subDays, format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 
 if (!process.env.CLERK_SECRET_KEY) {
   console.error("CLERK_SECRET_KEY is not set in .env.local");
@@ -149,7 +162,10 @@ async function main() {
   await db.delete(communicationsLog);
   await db.delete(clinicalNotes);
   await db.delete(auditLogs);
+  await db.delete(waitlistEntries);
   await db.delete(appointments);
+  await db.delete(staffAssignments);
+  await db.delete(branchOverrides);
   await db.delete(staff);
   await db.delete(services);
   await db.delete(branches);
@@ -181,6 +197,7 @@ async function main() {
       ],
       latitude: "7.0085000",
       longitude: "125.0140000",
+      maxCapacity: 3,
     },
     {
       tenantId,
@@ -198,6 +215,7 @@ async function main() {
       ],
       latitude: "7.0075000",
       longitude: "125.0125000",
+      maxCapacity: 2,
     }
   ]).returning();
 
@@ -209,16 +227,41 @@ async function main() {
   ]).returning();
 
   console.log("Inserting Staff records...");
-  await db.insert(staff).values([
+  const [drOwner, janeStaff] = await db.insert(staff).values([
     { tenantId, userId: owner.id, name: "Dr. Owner", role: "admin" },
     { tenantId, userId: staffUser.id, name: "Jane Staff", role: "staff" },
+  ]).returning();
+
+  console.log("Inserting Staff Assignments...");
+  await db.insert(staffAssignments).values([
+    // Jane Staff at Downtown on Weekdays
+    { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 1, startTime: "09:00", endTime: "17:00" },
+    { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 2, startTime: "09:00", endTime: "17:00" },
+    { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 3, startTime: "09:00", endTime: "17:00" },
+    { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 4, startTime: "09:00", endTime: "17:00" },
+    { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 5, startTime: "09:00", endTime: "17:00" },
+    // Dr Owner at Westside on Weekdays
+    { tenantId, staffId: drOwner.id, branchId: branch2.id, dayOfWeek: 1, startTime: "08:00", endTime: "16:00" },
+    { tenantId, staffId: drOwner.id, branchId: branch2.id, dayOfWeek: 2, startTime: "08:00", endTime: "16:00" },
+  ]);
+
+  console.log("Inserting Branch Overrides...");
+  await db.insert(branchOverrides).values([
+    {
+      tenantId,
+      branchId: branch1.id,
+      startDate: setHours(addDays(startOfDay(new Date()), 7), 0),
+      endDate: setHours(addDays(startOfDay(new Date()), 7), 23),
+      reason: "Annual Maintenance",
+      isClosed: true,
+    }
   ]);
 
   console.log("Inserting Mock Appointments...");
   const today = startOfDay(new Date());
 
   // Past appointments (completed)
-  await db.insert(appointments).values([
+  const [pastAppt] = await db.insert(appointments).values([
     {
       tenantId,
       branchId: branch1.id,
@@ -230,10 +273,18 @@ async function main() {
       endTime: setMinutes(setHours(subDays(today, 1), 10), 30),
       status: "completed",
     },
-  ]);
+  ]).returning();
+
+  console.log("Inserting Clinical Notes...");
+  await db.insert(clinicalNotes).values({
+    tenantId,
+    appointmentId: pastAppt.id,
+    dentistId: owner.id,
+    content: "Patient has good oral hygiene. Recommended regular cleaning every 6 months.",
+  });
 
   // Future appointments (upcoming)
-  await db.insert(appointments).values([
+  const futureAppts = await db.insert(appointments).values([
     {
       tenantId,
       branchId: branch1.id,
@@ -276,7 +327,41 @@ async function main() {
       endTime: setMinutes(setHours(addDays(today, 3), 10), 15),
       status: "confirmed",
     }
+  ]).returning();
+
+  console.log("Inserting Audit Logs...");
+  await db.insert(auditLogs).values(
+    futureAppts.map(appt => ({
+      tenantId,
+      appointmentId: appt.id,
+      userId: owner.id,
+      action: "appointment_created",
+      payload: { source: "seed_script" },
+    }))
+  );
+
+  console.log("Inserting Waitlist Entries...");
+  await db.insert(waitlistEntries).values([
+    {
+      tenantId,
+      branchId: branch1.id,
+      serviceId: cleaning.id,
+      patientName: "Waitlist Patient 1",
+      patientPhone: "+639123456789",
+      patientEmail: "waitlist1@test.com",
+      preferredDays: ["Monday", "Wednesday"],
+      status: "waiting",
+    },
+    {
+      tenantId,
+      branchId: branch1.id,
+      serviceId: consultation.id,
+      patientName: "Waitlist Patient 2",
+      patientPhone: "+639987654321",
+      status: "notified",
+    }
   ]);
+
 
   console.log("\nDatabase seeded successfully!");
   console.log("--------------------------------------------------");

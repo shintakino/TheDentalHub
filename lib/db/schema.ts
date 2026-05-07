@@ -1,5 +1,14 @@
 import { pgTable, text, timestamp, uuid, jsonb, integer, decimal, boolean } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, InferSelectModel } from "drizzle-orm";
+
+export type Clinic = InferSelectModel<typeof clinics>;
+export type Branch = InferSelectModel<typeof branches>;
+export type Service = InferSelectModel<typeof services>;
+export type StaffMember = InferSelectModel<typeof staff>;
+export type Appointment = InferSelectModel<typeof appointments>;
+export type WaitlistEntry = InferSelectModel<typeof waitlistEntries>;
+export type BranchOverride = InferSelectModel<typeof branchOverrides>;
+export type StaffAssignment = InferSelectModel<typeof staffAssignments>;
 
 export const clinics = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
