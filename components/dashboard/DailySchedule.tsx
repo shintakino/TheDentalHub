@@ -13,10 +13,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface Appointment {
   id: string;
@@ -31,14 +32,19 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
   const [noteContent, setNoteContent] = useState("");
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [activeApptId, setActiveApptId] = useState<string | null>(null);
+  const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
+  const [actualPrice, setActualPrice] = useState("");
 
-  const handleStatusChange = async (id: string, newStatus: AppointmentStatus) => {
+  const handleStatusChange = async (id: string, newStatus: AppointmentStatus, price?: string) => {
     setLoadingId(id);
     try {
       const res = await fetch(`/api/appointments/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ 
+          status: newStatus,
+          actualPrice: price
+        }),
       });
 
       if (!res.ok) {
@@ -148,7 +154,16 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
                       </Button>
                     )}
                     {validNextStates.includes("completed") && (
-                      <Button size="lg" variant="outline" className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 font-outfit font-medium px-8 transition-all active:scale-95" disabled={loadingId === app.id} onClick={() => handleStatusChange(app.id, "completed")}>
+                      <Button 
+                        size="lg" 
+                        variant="outline" 
+                        className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 font-outfit font-medium px-8 transition-all active:scale-95" 
+                        disabled={loadingId === app.id} 
+                        onClick={() => {
+                          setActiveApptId(app.id);
+                          setIsCompletionDialogOpen(true);
+                        }}
+                      >
                         Mark Completed
                       </Button>
                     )}
@@ -167,23 +182,61 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
 
       <Dialog open={isNoteDialogOpen} onOpenChange={setIsNoteDialogOpen}>
         <DialogContent className="sm:max-w-[500px] border-none shadow-[0_4px_32px_rgba(0,0,0,0.15)] bg-white font-outfit">
-          <DialogHeader>
-            <DialogTitle className="font-playfair text-2xl font-semibold text-obsidian">Clinical Note</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Textarea
-              placeholder="Enter treatment details, observations, or next steps..."
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-              className="min-h-[150px] border-slate-200 focus:ring-sapphire focus:border-sapphire font-outfit text-base"
-            />
+          <div className="p-6">
+            <h2 className="font-playfair text-2xl font-semibold text-obsidian mb-4">Clinical Note</h2>
+            <div className="py-4">
+              <Textarea
+                placeholder="Enter treatment details, observations, or next steps..."
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                className="min-h-[150px] border-slate-200 focus:ring-sapphire focus:border-sapphire font-outfit text-base"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setIsNoteDialogOpen(false)} disabled={loadingId !== null}>Cancel</Button>
+              <Button className="bg-sapphire hover:bg-blue-700 text-white" onClick={handleAddNote} disabled={loadingId !== null || !noteContent.trim()}>
+                Save Note
+              </Button>
+            </DialogFooter>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsNoteDialogOpen(false)} disabled={loadingId !== null}>Cancel</Button>
-            <Button className="bg-sapphire hover:bg-blue-700 text-white" onClick={handleAddNote} disabled={loadingId !== null || !noteContent.trim()}>
-              Save Note
-            </Button>
-          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCompletionDialogOpen} onOpenChange={setIsCompletionDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] border-none shadow-[0_4px_32px_rgba(0,0,0,0.15)] bg-white font-outfit">
+          <div className="p-6">
+            <h2 className="font-playfair text-2xl font-semibold text-obsidian mb-4">Complete Appointment</h2>
+            <div className="py-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-slate-600">Final Price ($)</Label>
+                <Input
+                  id="price"
+                  type="text"
+                  placeholder="0.00"
+                  value={actualPrice}
+                  onChange={(e) => setActualPrice(e.target.value)}
+                  className="rounded-xl h-12 border-slate-200 focus:ring-emerald-500 focus:border-emerald-500 font-outfit text-lg tabular-nums"
+                />
+                <p className="text-xs text-slate-400 italic">Leave blank to use the service's base price.</p>
+              </div>
+            </div>
+            <DialogFooter className="gap-3">
+              <Button variant="ghost" onClick={() => setIsCompletionDialogOpen(false)} disabled={loadingId !== null}>Cancel</Button>
+              <Button 
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8" 
+                onClick={async () => {
+                  if (activeApptId) {
+                    await handleStatusChange(activeApptId, "completed", actualPrice || undefined);
+                    setIsCompletionDialogOpen(false);
+                    setActualPrice("");
+                  }
+                }} 
+                disabled={loadingId !== null}
+              >
+                {loadingId ? "Processing..." : "Complete & Bill"}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

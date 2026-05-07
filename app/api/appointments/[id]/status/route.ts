@@ -12,6 +12,7 @@ import { after } from "next/server";
 
 const updateStatusSchema = z.object({
   status: z.enum(appointmentStatusEnum),
+  actualPrice: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
 });
 
 export async function PATCH(
@@ -32,11 +33,12 @@ export async function PATCH(
       return NextResponse.json({ error: validationResult.error.format() }, { status: 400 });
     }
 
-    const { status: newStatus } = validationResult.data;
+    const { status: newStatus, actualPrice } = validationResult.data;
 
     // 1. Fetch current appointment
     const currentAppt = await db.query.appointments.findFirst({
       where: and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)),
+      with: { service: true }
     });
 
     if (!currentAppt) {
@@ -54,8 +56,20 @@ export async function PATCH(
 
     // 3. Execute Transaction
     await db.transaction(async (tx) => {
+      const updateData: any = { 
+        status: newStatus, 
+        updatedAt: new Date() 
+      };
+
+      if (actualPrice) {
+        updateData.actualPrice = actualPrice;
+      } else if (newStatus === "completed" && !currentAppt.actualPrice) {
+        // Fallback to service price if completing and no price set
+        updateData.actualPrice = currentAppt.service.price;
+      }
+
       await tx.update(appointments)
-        .set({ status: newStatus, updatedAt: new Date() })
+        .set(updateData)
         .where(eq(appointments.id, id));
 
       await tx.insert(auditLogs).values({

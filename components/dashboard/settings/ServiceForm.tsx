@@ -32,9 +32,11 @@ export function ServiceForm({ tenantId, initialData, onSuccess }: ServiceFormPro
     defaultValues: initialData ? {
       name: initialData.name,
       duration: initialData.duration,
+      price: initialData.price,
     } : {
       name: "",
       duration: 30,
+      price: "0.00",
     },
   });
 
@@ -92,6 +94,24 @@ export function ServiceForm({ tenantId, initialData, onSuccess }: ServiceFormPro
                   className="rounded-xl h-11 border-slate-200 focus:border-primary transition-all tabular-nums" 
                   {...field}
                   onChange={(e) => field.onChange(parseInt(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-outfit text-slate-600">Base Price ($)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="0.00" 
+                  className="rounded-xl h-11 border-slate-200 focus:border-primary transition-all tabular-nums" 
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
