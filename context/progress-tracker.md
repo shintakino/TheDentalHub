@@ -52,7 +52,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-None.
+- [ ] Implemented Branch Autonomy & Clinic-Wide Intelligence (26-branch-autonomy-clinic-intelligence.md)
 
 ## Open Questions
 
