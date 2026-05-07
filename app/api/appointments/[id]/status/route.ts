@@ -7,6 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { AppointmentStateMachine } from "@/lib/appointments/state-machine";
 import { notificationTriggers } from "@/lib/notifications/triggers";
+import { loyaltyLogic } from "@/lib/loyalty/logic";
 import { after } from "next/server";
 
 const updateStatusSchema = z.object({
@@ -66,16 +67,19 @@ export async function PATCH(
       });
     });
 
-    // 4. Trigger Notifications
-    if (newStatus === "cancelled") {
-      after(async () => {
-        try {
+    // 4. Trigger Notifications & Loyalty
+    after(async () => {
+      try {
+        if (newStatus === "cancelled") {
           await notificationTriggers.triggerCancellationNotice(id);
-        } catch (err) {
-          console.error("Failed to trigger cancellation notice:", err);
         }
-      });
-    }
+        if (newStatus === "completed" && currentAppt) {
+          await loyaltyLogic.awardPointsForAppointment(currentAppt);
+        }
+      } catch (err) {
+        console.error("Background task failed:", err);
+      }
+    });
 
     return NextResponse.json({ success: true, status: newStatus });
   } catch (error) {
