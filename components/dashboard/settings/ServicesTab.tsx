@@ -100,13 +100,14 @@ export function ServicesTab({ tenantId }: { tenantId: string }) {
             <TableRow className="border-slate-100 hover:bg-transparent">
               <TableHead className="font-outfit font-medium text-slate-500 py-6 pl-8">Service Name</TableHead>
               <TableHead className="font-outfit font-medium text-slate-500 py-6">Duration</TableHead>
+              <TableHead className="font-outfit font-medium text-slate-500 py-6">Base Price</TableHead>
               <TableHead className="font-outfit font-medium text-slate-500 py-6 text-right pr-8">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {services.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-12 text-slate-400 font-outfit">
+                <TableCell colSpan={4} className="text-center py-12 text-slate-400 font-outfit">
                   No services configured yet.
                 </TableCell>
               </TableRow>
@@ -119,6 +120,9 @@ export function ServicesTab({ tenantId }: { tenantId: string }) {
                       <Timer className="w-4 h-4 text-slate-400" />
                       {service.duration} minutes
                     </div>
+                  </TableCell>
+                  <TableCell className="py-6 font-outfit text-slate-600 tabular-nums">
+                    ${service.price}
                   </TableCell>
                   <TableCell className="py-6 text-right pr-8">
                     <DropdownMenu>
