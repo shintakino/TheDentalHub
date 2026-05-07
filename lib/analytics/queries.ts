@@ -1,7 +1,108 @@
 import { db } from "@/lib/db";
-import { appointments, staff, waitlistEntries, branches, staffAssignments } from "@/lib/db/schema";
-import { and, eq, gte, lte, sql, ne } from "drizzle-orm";
+import { appointments, staff, waitlistEntries, branches, staffAssignments, services } from "@/lib/db/schema";
+import { and, eq, gte, lte, sql, ne, inArray } from "drizzle-orm";
 import { cache } from "react";
+
+// ... (existing queries)
+
+export const getRevenueAnalytics = cache(async (tenantId: string, startDate: string, endDate: string, branchId?: string) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  const baseConditions = [
+    eq(appointments.tenantId, tenantId),
+    gte(appointments.startTime, start),
+    lte(appointments.startTime, end)
+  ];
+
+  if (branchId) {
+    baseConditions.push(eq(appointments.branchId, branchId));
+  }
+
+  // 1. Realized Revenue (Completed)
+  const [realizedStats] = await db
+    .select({
+      total: sql<number>`sum(COALESCE(actual_price, 0))`.mapWith(Number),
+      count: sql<number>`count(*)`
+    })
+    .from(appointments)
+    .where(
+      and(
+        ...baseConditions,
+        eq(appointments.status, "completed")
+      )
+    );
+
+  // 2. Projected Revenue (Confirmed, Checked-in, In Progress)
+  // For projected, we use service.price as a fallback if actual_price is not set
+  const [projectedStats] = await db
+    .select({
+      total: sql<number>`sum(COALESCE(appointments.actual_price, services.price, 0))`.mapWith(Number)
+    })
+    .from(appointments)
+    .innerJoin(services, eq(services.id, appointments.serviceId))
+    .where(
+      and(
+        ...baseConditions,
+        inArray(appointments.status, ["confirmed", "checked_in", "in_progress"])
+      )
+    );
+
+  // 3. Service Profitability
+  const serviceProfitability = await db
+    .select({
+      serviceName: services.name,
+      revenue: sql<number>`sum(COALESCE(appointments.actual_price, 0))`.mapWith(Number),
+      count: sql<number>`count(*)`
+    })
+    .from(appointments)
+    .innerJoin(services, eq(services.id, appointments.serviceId))
+    .where(
+      and(
+        ...baseConditions,
+        eq(appointments.status, "completed")
+      )
+    )
+    .groupBy(services.name)
+    .orderBy(sql`sum(COALESCE(appointments.actual_price, 0)) desc`);
+
+  // 4. Revenue by Branch
+  const revenueByBranch = await db
+    .select({
+      branchName: branches.name,
+      revenue: sql<number>`sum(COALESCE(appointments.actual_price, 0))`.mapWith(Number)
+    })
+    .from(appointments)
+    .innerJoin(branches, eq(branches.id, appointments.branchId))
+    .where(
+      and(
+        ...baseConditions,
+        eq(appointments.status, "completed")
+      )
+    )
+    .groupBy(branches.name);
+
+  // 5. Avg. Revenue Per Appointment
+  const avgRevenue = realizedStats.count > 0 ? realizedStats.total / Number(realizedStats.count) : 0;
+
+  return {
+    summary: {
+      totalRevenue: realizedStats.total || 0,
+      projectedIncome: projectedStats.total || 0,
+      avgRevenuePerAppointment: avgRevenue,
+    },
+    serviceProfitability: serviceProfitability.map(s => ({
+      name: s.serviceName,
+      revenue: s.revenue,
+      count: Number(s.count)
+    })),
+    revenueByBranch: revenueByBranch.map(b => ({
+      name: b.branchName,
+      revenue: b.revenue
+    }))
+  };
+});
 
 // ... (previous queries)
 
