@@ -92,11 +92,13 @@ export default async function PatientsPage() {
                   </TableCell>
                   <TableCell className="py-4 px-6 text-right">
                     <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        }
+                      />
                       <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-lg border-slate-100">
                         <DropdownMenuItem className="font-outfit cursor-pointer">
                           <CalendarDays className="w-4 h-4 mr-2" />

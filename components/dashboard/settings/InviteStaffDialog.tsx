@@ -51,8 +51,9 @@ export function InviteStaffDialog({ tenantId, onSuccess }: InviteStaffDialogProp
 
       toast.success("Invitation sent successfully");
       onSuccess();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to invite staff";
+      toast.error(message);
     }
   };
 

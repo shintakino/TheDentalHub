@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { format, startOfDay, addDays, eachDayOfInterval } from "date-fns";
+import { Fragment } from "react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -80,8 +81,8 @@ export function NetworkHeatmap() {
                 ))}
                 
                 {branchIds.map(branchId => (
-                  <>
-                    <div key={branchId} className="text-xs font-semibold py-2 truncate pr-4 font-outfit">
+                  <Fragment key={branchId}>
+                    <div className="text-xs font-semibold py-2 truncate pr-4 font-outfit">
                       Branch {branchId.slice(0, 4)}...
                     </div>
                     {days.map((day, i) => {
@@ -103,7 +104,7 @@ export function NetworkHeatmap() {
                         </Tooltip>
                       );
                     })}
-                  </>
+                  </Fragment>
                 ))}
               </div>
             </div>

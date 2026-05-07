@@ -25,12 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ServiceForm } from "./ServiceForm";
-
-interface Service {
-  id: string;
-  name: string;
-  duration: number;
-}
+import { Service } from "@/lib/db/schema";
 
 export function ServicesTab({ tenantId }: { tenantId: string }) {
   const [services, setServices] = useState<Service[]>([]);
@@ -69,8 +64,9 @@ export function ServicesTab({ tenantId }: { tenantId: string }) {
       }
       toast.success("Service deleted");
       fetchServices();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete service";
+      toast.error(message);
     }
   };
 
@@ -162,7 +158,7 @@ export function ServicesTab({ tenantId }: { tenantId: string }) {
           <div className="p-8 pt-6">
             <ServiceForm 
               tenantId={tenantId} 
-              initialData={editingService} 
+              initialData={editingService || undefined} 
               onSuccess={() => {
                 setIsDialogOpen(false);
                 fetchServices();

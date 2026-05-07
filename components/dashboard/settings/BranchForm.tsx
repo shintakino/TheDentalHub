@@ -19,9 +19,14 @@ import { OperatingHoursEditor } from "./OperatingHoursEditor";
 import { BranchMapPreview } from "./BranchMapPreview";
 import { Switch } from "@/components/ui/switch";
 
+import { branches } from "@/lib/db/schema";
+import { InferSelectModel } from "drizzle-orm";
+
+type Branch = InferSelectModel<typeof branches>;
+
 interface BranchFormProps {
   tenantId: string;
-  initialData?: any;
+  initialData?: Branch;
   onSuccess: () => void;
 }
 
@@ -75,8 +80,9 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
 
       toast.success(initialData ? "Branch configuration updated" : "New branch registered");
       onSuccess();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to save branch";
+      toast.error(message);
     }
   };
 

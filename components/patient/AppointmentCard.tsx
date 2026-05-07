@@ -9,8 +9,26 @@ import { Calendar, MapPin, Clock, MoreVertical, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
+import { AppointmentStatus } from "@/lib/db/schema";
+
 interface AppointmentCardProps {
-  appointment: any; // Using any for now to simplify, will refine if possible
+  appointment: {
+    id: string;
+    startTime: string | Date;
+    endTime: string | Date;
+    status: AppointmentStatus;
+    clinic: {
+      name: string;
+      logoUrl: string | null;
+    } | null;
+    branch: {
+      name: string;
+      address: string | null;
+    } | null;
+    service: {
+      name: string;
+    } | null;
+  };
   isUpcoming?: boolean;
 }
 
@@ -34,18 +52,21 @@ export function AppointmentCard({ appointment, isUpcoming }: AppointmentCardProp
 
       toast.success("Appointment cancelled successfully");
       router.refresh();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to cancel";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const statusColors: Record<string, string> = {
+  const statusColors: Record<AppointmentStatus, string> = {
     confirmed: "bg-green-100 text-green-800",
     cancelled: "bg-red-100 text-red-800",
     completed: "bg-blue-100 text-blue-800",
     no_show: "bg-gray-100 text-gray-800",
+    checked_in: "bg-emerald-100 text-emerald-800",
+    in_progress: "bg-indigo-100 text-indigo-800",
   };
 
   const canCancel = isUpcoming && appointment.status === "confirmed" && 

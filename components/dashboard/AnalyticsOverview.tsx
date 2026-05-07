@@ -37,7 +37,7 @@ export function AnalyticsOverview({ data }: { data: AnalyticsResponse }) {
           <CardHeader>
             <CardTitle className="font-playfair text-xl text-obsidian">Booking Trends</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[300px] min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data.timeSeries}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -54,7 +54,7 @@ export function AnalyticsOverview({ data }: { data: AnalyticsResponse }) {
           <CardHeader>
             <CardTitle className="font-playfair text-xl text-obsidian">Volume by Hour</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[300px] min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.peakHours}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />

@@ -71,8 +71,9 @@ export function StaffTab({ tenantId }: { tenantId: string }) {
       if (!response.ok) throw new Error("Failed to remove staff member");
       toast.success("Staff member removed");
       fetchStaff();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete staff member";
+      toast.error(message);
     }
   };
 

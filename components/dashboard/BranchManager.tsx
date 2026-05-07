@@ -43,25 +43,7 @@ import { BranchForm } from "./settings/BranchForm";
 import { BranchOverrides } from "./BranchOverrides";
 import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
-
-interface OperatingHour {
-  day: number;
-  open: string;
-  close: string;
-  active: boolean;
-}
-
-interface Branch {
-  id: string;
-  name: string;
-  address: string | null;
-  timezone: string;
-  operatingHours: OperatingHour[];
-  maxCapacity: number;
-  isActive: boolean;
-  latitude: string | null;
-  longitude: string | null;
-}
+import { Branch } from "@/lib/db/schema";
 
 export function BranchManager({ tenantId }: { tenantId: string }) {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -101,8 +83,12 @@ export function BranchManager({ tenantId }: { tenantId: string }) {
       }
       toast.success("Branch deleted");
       fetchBranches();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     }
   };
 
@@ -378,10 +364,10 @@ export function BranchManager({ tenantId }: { tenantId: string }) {
                 : "Register a new physical location for your clinic network."}
             </DialogDescription>
           </DialogHeader>
-          <div className="p-8 pt-6 max-h-[80vh] overflow-y-auto">
+          <div className="p-8 pt-6">
             <BranchForm 
               tenantId={tenantId} 
-              initialData={editingBranch} 
+              initialData={editingBranch || undefined} 
               onSuccess={() => {
                 setIsDialogOpen(false);
                 fetchBranches();

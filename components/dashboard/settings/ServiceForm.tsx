@@ -15,9 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+import { services } from "@/lib/db/schema";
+import { InferSelectModel } from "drizzle-orm";
+
+type Service = InferSelectModel<typeof services>;
+
 interface ServiceFormProps {
   tenantId: string;
-  initialData?: any;
+  initialData?: Service;
   onSuccess: () => void;
 }
 
@@ -51,8 +56,9 @@ export function ServiceForm({ tenantId, initialData, onSuccess }: ServiceFormPro
 
       toast.success(initialData ? "Service updated" : "Service created");
       onSuccess();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to save service";
+      toast.error(message);
     }
   };
 

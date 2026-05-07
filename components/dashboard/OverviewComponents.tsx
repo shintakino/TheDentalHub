@@ -103,12 +103,17 @@ export function QuickActions({ tenantSlug }: { tenantSlug: string }) {
   );
 }
 
-interface Activity {
+export interface ActivityStatusPayload {
+  from?: string;
+  to?: string;
+}
+
+export interface Activity {
   id: string;
   action: string;
   patientName?: string;
   timestamp: Date;
-  payload: any;
+  payload: ActivityStatusPayload | null;
 }
 
 export function ActivityFeed({ activities }: { activities: Activity[] }) {

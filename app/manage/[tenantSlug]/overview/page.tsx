@@ -5,7 +5,7 @@ import { getTenantId } from "@/lib/db/tenant";
 import { DailySchedule } from "@/components/dashboard/DailySchedule";
 import { WaitlistManager } from "@/components/dashboard/WaitlistManager";
 import { LivePulse } from "@/components/dashboard/LivePulse";
-import { KPISnapshot, QuickActions, ActivityFeed } from "@/components/dashboard/OverviewComponents";
+import { KPISnapshot, QuickActions, ActivityFeed, Activity, ActivityStatusPayload } from "@/components/dashboard/OverviewComponents";
 import { startOfDay, endOfDay } from "date-fns";
 
 export default async function DashboardPage({
@@ -15,8 +15,6 @@ export default async function DashboardPage({
 }) {
   const { tenantSlug } = await params;
   const tenantId = await getTenantId();
-
-  // ... (rest of data fetching)
 
   // Fetch today's appointments for this tenant
   const today = new Date();
@@ -58,12 +56,12 @@ export default async function DashboardPage({
     status: app.status,
   }));
 
-  const formattedActivities = recentLogs.map(log => ({
+  const formattedActivities: Activity[] = recentLogs.map(log => ({
     id: log.id,
     action: log.action,
     patientName: log.appointment?.patientName,
     timestamp: log.createdAt,
-    payload: log.payload,
+    payload: log.payload as ActivityStatusPayload | null,
   }));
 
   return (

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
+import { LucideIcon } from "lucide-react";
 import { 
-  LayoutDashboard, 
-  CalendarDays, 
-  Users, 
-  BarChart3, 
+  LayoutDashboard,
+  CalendarDays,
+  Users,
+  BarChart3,
   Settings,
   Menu,
   Search,
@@ -21,7 +22,13 @@ import { useState } from "react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAuth, useOrganization } from "@clerk/nextjs";
 
-const navigation = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  isRoot?: boolean;
+}
+const navigation: NavItem[] = [
   { name: "Dashboard", href: "/overview", icon: LayoutDashboard },
   { name: "Schedule", href: "/schedule", icon: CalendarDays },
   { name: "Patients", href: "/patients", icon: Users },
@@ -31,7 +38,7 @@ const navigation = [
   { name: "Find a Clinic", href: "/search", icon: Search, isRoot: true },
 ];
 
-const patientNavigation = [
+const patientNavigation: NavItem[] = [
   { name: "My Appointments", href: "/dashboard", icon: LayoutDashboard, isRoot: true },
   { name: "Find a Clinic", href: "/search", icon: Search, isRoot: true },
   { name: "Medical Records", href: "/records", icon: FileText, isRoot: true },
@@ -44,18 +51,17 @@ function NavLinks({ onItemClick }: { onItemClick?: () => void }) {
   const params = useParams();
   const { has } = useAuth();
   const { organization } = useOrganization();
-  
+
   const tenantSlug = (params?.tenantSlug as string) || organization?.id || "";
   const isPatientView = !tenantSlug || pathname.startsWith("/dashboard") || pathname.startsWith("/records") || pathname.startsWith("/notifications");
-  
+
   const currentNavigation = !isPatientView ? navigation : patientNavigation;
 
   return (
     <nav className="flex flex-col gap-6 mt-8 px-6">
       {currentNavigation.map((item) => {
-        const isRoot = (item as any).isRoot;
-        const fullHref = (!isRoot && tenantSlug) ? `/manage/${tenantSlug}${item.href}` : item.href;
-        
+        const isRoot = item.isRoot;
+        const fullHref = (!isRoot && tenantSlug) ? `/manage/${tenantSlug}${item.href}` : item.href;        
         // Exact match for dashboard/overview, startsWith for others to handle sub-routes
         const isActive = (item.href === "/overview" || item.href === "/dashboard") 
           ? pathname === fullHref 

@@ -26,14 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { BranchForm } from "./BranchForm";
-
-interface Branch {
-  id: string;
-  name: string;
-  address: string | null;
-  timezone: string;
-  operatingHours: { day: number; open: string; close: string; active: boolean }[];
-}
+import { Branch } from "@/lib/db/schema";
 
 export function BranchesTab({ tenantId }: { tenantId: string }) {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -72,8 +65,9 @@ export function BranchesTab({ tenantId }: { tenantId: string }) {
       }
       toast.success("Branch deleted");
       fetchBranches();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete branch";
+      toast.error(message);
     }
   };
 
@@ -172,7 +166,7 @@ export function BranchesTab({ tenantId }: { tenantId: string }) {
           <div className="p-8 pt-6">
             <BranchForm 
               tenantId={tenantId} 
-              initialData={editingBranch} 
+              initialData={editingBranch || undefined} 
               onSuccess={() => {
                 setIsDialogOpen(false);
                 fetchBranches();
