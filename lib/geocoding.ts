@@ -32,14 +32,14 @@ export async function geocodeAddress(address: string): Promise<{ lat: number; ln
     // Fallback/Mock for development if Nominatim fails or returns nothing
     console.warn(`Geocoding returned no results for: ${address}. Using fallback.`);
     return {
-      lat: 40.7128 + (Math.random() - 0.5) * 0.1,
-      lng: -74.0060 + (Math.random() - 0.5) * 0.1
+      lat: 7.0084 + (Math.random() - 0.5) * 0.1,
+      lng: 125.0139 + (Math.random() - 0.5) * 0.1
     };
   } catch (error) {
     console.error("Geocoding error:", error);
     return {
-      lat: 40.7128,
-      lng: -74.0060
+      lat: 7.0084,
+      lng: 125.0139
     };
   }
 }

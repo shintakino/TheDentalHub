@@ -2,14 +2,6 @@
 
 Update this file whenever the current phase, active feature, or implementation state changes.
 
-## Current Phase
-
-- Feature 15: Clinic Discovery & Marketplace
-
-## Current Goal
-
-- Implement Clinic Discovery Marketplace with map-based search and "Next Available" slot preview.
-
 ## Completed
 
 - Initial project documentation and context mapping.
@@ -20,7 +12,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Implemented Auth using Clerk (03-auth.md)
 - [x] Implemented RBAC using Clerk Organizations (04-RBAC.md)
 - [x] Implemented Scheduling Engine (05-scheduling-engine.md)
-- [x] Created Supabase Setup & Seeding specification (06-supabase-setup-seeding.md)
+- [x_] Created Supabase Setup & Seeding specification (06-supabase-setup-seeding.md)
 - [x] Created Appointment Management specification (07-appointment-management.md)
 - [x] Implemented Appointment Management & Lifecycle (07-appointment-management.md)
 - [x] Aligned dashboard route structure with specs (moved to app/(dashboard))
@@ -33,14 +25,17 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Implemented Communications & Notifications (Branded Email/SMS) (13-communications-notifications.md)
 - [x] Implemented Patient Portal (14-patient-portal.md)
 - [x] Implemented Clinic Discovery & Marketplace (15-clinic-discovery-marketplace.md)
+- [x] Implemented Marketing Landing Page (17-marketing-landing-page.md)
+- [x] Implemented Clinic Onboarding Flow (16-clinic-onboarding-flow.md)
+- [x] Implemented Development Seeding & Mock Data Strategy (18-development-seeding-strategy.md)
+- [x] Implemented Patient Sidebar Expansion (Medical Records, Notifications, Settings) (19-patient-sidebar-expansion.md)
+- [x] Fixed Issue 1: Unreachable Clinic Discovery Map (Marketplace)
+- [x] Fixed Issue 2: Booking Failure (Migrated Booking Flow to real DB)
 
 ## In Progress
 
-- Feature 16: Clinic Onboarding Flow
+None.
 
-## Next Up
-
-- Feature 15: Clinic Discovery & Marketplace
 
 
 ## Open Questions

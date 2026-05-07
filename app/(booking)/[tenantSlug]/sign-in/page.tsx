@@ -1,5 +1,7 @@
 import { SignIn } from "@clerk/nextjs";
-import { mockDb } from "@/lib/db/mock-db";
+import { db } from "@/lib/db";
+import { clinics } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
 export default async function BrandedSignInPage({
@@ -11,7 +13,9 @@ export default async function BrandedSignInPage({
 }) {
   const { tenantSlug } = await params;
   const { redirect_url } = await searchParams;
-  const clinic = await mockDb.getClinicBySubdomain(tenantSlug);
+  const clinic = await db.query.clinics.findFirst({
+    where: eq(clinics.subdomain, tenantSlug),
+  });
 
   if (!clinic) notFound();
 
@@ -34,7 +38,7 @@ export default async function BrandedSignInPage({
             footerActionLink: "text-primary hover:text-primary/80 font-bold",
           },
           variables: {
-            colorPrimary: clinic.primaryColor,
+            colorPrimary: clinic.primaryColor || "#0047FF",
           }
         }}
         signUpUrl={`/${tenantSlug}/sign-up`}

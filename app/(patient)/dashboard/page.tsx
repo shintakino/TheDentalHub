@@ -4,6 +4,9 @@ import { appointments } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { AppointmentCard } from "@/components/patient/AppointmentCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 
 async function getAppointments(userId: string) {
   return await db.query.appointments.findMany({
@@ -38,6 +41,12 @@ export default async function PatientDashboard() {
           <h1 className="text-3xl font-bold font-heading">My Appointments</h1>
           <p className="text-muted-foreground">Manage your upcoming and past dental visits.</p>
         </div>
+        <Button asChild>
+          <Link href="/search">
+            <Plus className="mr-2 h-4 w-4" />
+            Book New Appointment
+          </Link>
+        </Button>
       </div>
 
       <Tabs defaultValue="upcoming" className="w-full">
@@ -54,8 +63,13 @@ export default async function PatientDashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 border rounded-lg bg-white shadow-sm">
+            <div className="text-center py-12 border rounded-lg bg-white shadow-sm space-y-4">
               <p className="text-muted-foreground">You have no upcoming appointments.</p>
+              <Button asChild variant="outline">
+                <Link href="/search">
+                  Explore Clinics & Book
+                </Link>
+              </Button>
             </div>
           )}
         </TabsContent>

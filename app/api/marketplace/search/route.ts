@@ -5,8 +5,8 @@ import { refreshBranchAvailability } from "@/lib/marketplace/availability";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const lat = parseFloat(searchParams.get("lat") || "40.7128");
-    const lng = parseFloat(searchParams.get("lng") || "-74.0060");
+    const lat = parseFloat(searchParams.get("lat") || "7.0084");
+    const lng = parseFloat(searchParams.get("lng") || "125.0139");
     const radius = parseFloat(searchParams.get("radius") || "25");
     const query = searchParams.get("query") || undefined;
 

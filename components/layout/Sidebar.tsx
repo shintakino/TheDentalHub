@@ -8,7 +8,10 @@ import {
   Users, 
   BarChart3, 
   Settings,
-  Menu
+  Menu,
+  Search,
+  FileText,
+  Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,10 +22,19 @@ import { useAuth, useOrganization } from "@clerk/nextjs";
 
 const navigation = [
   { name: "Dashboard", href: "/overview", icon: LayoutDashboard },
+  { name: "Find a Clinic", href: "/search", icon: Search, isRoot: true },
   { name: "Schedule", href: "/schedule", icon: CalendarDays },
   { name: "Patients", href: "/patients", icon: Users },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Settings", href: "/settings", icon: Settings },
+];
+
+const patientNavigation = [
+  { name: "My Appointments", href: "/dashboard", icon: LayoutDashboard, isRoot: true },
+  { name: "Find a Clinic", href: "/search", icon: Search, isRoot: true },
+  { name: "Medical Records", href: "/records", icon: FileText, isRoot: true },
+  { name: "Notifications", href: "/notifications", icon: Bell, isRoot: true },
+  { name: "Settings", href: "/settings", icon: Settings, isRoot: true },
 ];
 
 function NavLinks({ onItemClick }: { onItemClick?: () => void }) {
@@ -30,11 +42,13 @@ function NavLinks({ onItemClick }: { onItemClick?: () => void }) {
   const { has } = useAuth();
   const { organization } = useOrganization();
   const orgId = organization?.id || "";
+  
+  const currentNavigation = orgId ? navigation : patientNavigation;
 
   return (
     <nav className="flex flex-col gap-6 mt-8 px-6">
-      {navigation.map((item) => {
-        const fullHref = orgId ? `/${orgId}${item.href}` : item.href;
+      {currentNavigation.map((item) => {
+        const fullHref = (orgId && !(item as any).isRoot) ? `/${orgId}${item.href}` : item.href;
         const isActive = pathname === fullHref;
         
         const link = (
@@ -61,7 +75,7 @@ function NavLinks({ onItemClick }: { onItemClick?: () => void }) {
           </Link>
         );
 
-        if (item.name === "Settings") {
+        if (item.name === "Settings" && orgId) {
           const isAdmin = has && has({ role: "org:admin" });
           if (!isAdmin) return null;
           return link;

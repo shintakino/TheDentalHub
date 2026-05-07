@@ -1,4 +1,6 @@
-import { mockDb } from "@/lib/db/mock-db";
+import { db } from "@/lib/db";
+import { clinics } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -10,7 +12,9 @@ export default async function BookingLayout({
   params: Promise<{ tenantSlug: string }>;
 }) {
   const { tenantSlug } = await params;
-  const clinic = await mockDb.getClinicBySubdomain(tenantSlug);
+  const clinic = await db.query.clinics.findFirst({
+    where: eq(clinics.subdomain, tenantSlug),
+  });
 
   if (!clinic) {
     notFound();
@@ -30,7 +34,7 @@ export default async function BookingLayout({
           <Link href={`/${tenantSlug}/book`} className="flex items-center gap-3">
             <div 
               className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-serif text-xl font-bold"
-              style={{ backgroundColor: clinic.primaryColor }}
+              style={{ backgroundColor: clinic.primaryColor || "#0047FF" }}
             >
               {clinic.logoUrl ? (
                 <img src={clinic.logoUrl} alt={clinic.name} className="h-full w-full object-cover rounded-lg" />
@@ -42,8 +46,18 @@ export default async function BookingLayout({
               {clinic.name}
             </span>
           </Link>
-          <div className="hidden sm:block text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Patient Booking Portal
+          <div className="flex items-center gap-6">
+            <Link 
+              href="/search" 
+              className="hidden md:flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              Back to Marketplace
+            </Link>
+            <div className="hidden sm:block h-4 w-px bg-slate-200" />
+            <div className="hidden sm:block text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Patient Booking Portal
+            </div>
           </div>
         </div>
       </header>

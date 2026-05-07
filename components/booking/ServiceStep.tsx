@@ -25,7 +25,7 @@ export function ServiceStep({
         {services.map((service) => (
           <Link
             key={service.id}
-            href={`/${tenantSlug}?step=${nextStep}&serviceId=${service.id}`}
+            href={`/${tenantSlug}/book?step=${nextStep}&serviceId=${service.id}`}
             className="group p-6 rounded-2xl border bg-card hover:border-primary hover:shadow-lg transition-all flex items-center justify-between gap-4"
           >
             <div className="space-y-1">

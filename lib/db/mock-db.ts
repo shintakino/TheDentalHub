@@ -73,8 +73,8 @@ const branches: BranchConfig[] = [
     id: "branch-1",
     tenantId: "org_123",
     name: "Downtown Branch",
-    address: "123 Main St, New York, NY 10001",
-    timezone: "America/New_York",
+    address: "Quezon Boulevard, Kidapawan City, Cotabato",
+    timezone: "Asia/Manila",
     operatingHours: [
       { day: 0, open: "09:00", close: "17:00", active: false },
       { day: 1, open: "09:00", close: "17:00", active: true },
@@ -84,20 +84,20 @@ const branches: BranchConfig[] = [
       { day: 5, open: "09:00", close: "17:00", active: true },
       { day: 6, open: "09:00", close: "17:00", active: false },
     ],
-    latitude: 40.7128,
-    longitude: -74.0060,
+    latitude: 7.0085,
+    longitude: 125.0140,
   },
   {
     id: "branch-2",
     tenantId: "org_456",
     name: "Uptown Branch",
-    address: "456 Park Ave, New York, NY 10022",
-    timezone: "America/New_York",
+    address: "Datu Ingkal Street, Kidapawan City, Cotabato",
+    timezone: "Asia/Manila",
     operatingHours: [
       { day: 1, open: "08:00", close: "16:00", active: true },
     ],
-    latitude: 40.7736,
-    longitude: -73.9566,
+    latitude: 7.0075,
+    longitude: 125.0125,
   }
 ];
 

@@ -16,9 +16,32 @@ function DiscoveryContent() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState(searchParams.get("query") || "");
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({
-    lat: parseFloat(searchParams.get("lat") || "40.7128"),
-    lng: parseFloat(searchParams.get("lng") || "-74.0060"),
+    lat: parseFloat(searchParams.get("lat") || "7.0084"),
+    lng: parseFloat(searchParams.get("lng") || "125.0139"),
   });
+
+  // Geolocation detection
+  useEffect(() => {
+    const hasUrlCoords = searchParams.has("lat") && searchParams.has("lng");
+    
+    if (!hasUrlCoords && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCoords({ lat: latitude, lng: longitude });
+          
+          // Update URL to reflect detected location
+          const params = new URLSearchParams(window.location.search);
+          params.set("lat", latitude.toFixed(4));
+          params.set("lng", longitude.toFixed(4));
+          router.replace(`/search?${params.toString()}`, { scroll: false });
+        },
+        (error) => {
+          console.warn("Geolocation error:", error.message);
+        }
+      );
+    }
+  }, [searchParams, router]);
 
   const fetchBranches = useCallback(async (lat: number, lng: number, q?: string) => {
     setLoading(true);
@@ -54,7 +77,7 @@ function DiscoveryContent() {
     const params = new URLSearchParams(window.location.search);
     if (q) params.set("query", q);
     else params.delete("query");
-    router.push(`/?${params.toString()}`, { scroll: false });
+    router.push(`/search?${params.toString()}`, { scroll: false });
   };
 
   const handleMapMove = (lat: number, lng: number) => {
@@ -64,7 +87,7 @@ function DiscoveryContent() {
     const params = new URLSearchParams(window.location.search);
     params.set("lat", lat.toFixed(4));
     params.set("lng", lng.toFixed(4));
-    router.push(`/?${params.toString()}`, { scroll: false });
+    router.push(`/search?${params.toString()}`, { scroll: false });
   };
 
   return (

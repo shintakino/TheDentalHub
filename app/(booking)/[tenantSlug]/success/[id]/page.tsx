@@ -1,4 +1,6 @@
-import { mockDb } from "@/lib/db/mock-db";
+import { db } from "@/lib/db";
+import { clinics, appointments, branches, services } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -9,14 +11,19 @@ export default async function BookingSuccessPage({
   params: Promise<{ tenantSlug: string, id: string }>;
 }) {
   const { tenantSlug, id } = await params;
-  const clinic = await mockDb.getClinicBySubdomain(tenantSlug);
+  const clinic = await db.query.clinics.findFirst({
+    where: eq(clinics.subdomain, tenantSlug),
+  });
   if (!clinic) notFound();
 
-  const appointment = await mockDb.getAppointmentById(id);
+  const appointment = await db.query.appointments.findFirst({
+    where: eq(appointments.id, id),
+    with: {
+      branch: true,
+      service: true,
+    }
+  });
   if (!appointment) notFound();
-
-  const branch = await mockDb.getBranchById(appointment.branchId);
-  const service = await mockDb.getServiceById(appointment.serviceId);
 
   return (
     <div className="max-w-2xl mx-auto space-y-12 py-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -37,7 +44,7 @@ export default async function BookingSuccessPage({
           <div className="flex justify-between items-start pb-6 border-b border-slate-100">
             <div>
               <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground mb-1">Service</p>
-              <h3 className="text-xl font-bold">{service?.name}</h3>
+              <h3 className="text-xl font-bold">{appointment.service.name}</h3>
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground mb-1">Status</p>
@@ -56,8 +63,8 @@ export default async function BookingSuccessPage({
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground mb-1">Location</p>
-              <p className="font-bold">{branch?.name}</p>
-              <p className="text-xs font-medium text-slate-500">{branch?.address}</p>
+              <p className="font-bold">{appointment.branch.name}</p>
+              <p className="text-xs font-medium text-slate-500">{appointment.branch.address}</p>
             </div>
           </div>
         </div>
@@ -79,7 +86,7 @@ export default async function BookingSuccessPage({
 
       <div className="text-center">
         <Link 
-          href={`/dashboard/overview`}
+          href={`/dashboard`}
           className="text-sm font-bold text-primary uppercase tracking-widest hover:opacity-80 transition-opacity"
         >
           View My Appointments →

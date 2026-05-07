@@ -28,9 +28,11 @@ export default function ClinicCard({ branch }: ClinicCardProps) {
         <div className="flex-1 space-y-2">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="font-serif text-xl font-bold leading-tight group-hover:text-primary transition-colors">
-                {branch.clinicName}
-              </h3>
+              <Link href={`/${branch.subdomain}`}>
+                <h3 className="font-serif text-xl font-bold leading-tight hover:text-primary transition-colors">
+                  {branch.clinicName}
+                </h3>
+              </Link>
               <p className="text-xs font-medium text-primary mb-1">{branch.branchName}</p>
               <p className="text-sm text-muted-foreground line-clamp-1">
                 {branch.address}

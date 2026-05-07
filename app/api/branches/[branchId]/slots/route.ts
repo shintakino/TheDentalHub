@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { mockDb } from "@/lib/db/mock-db";
+import { db } from "@/lib/db";
+import { branches, services, appointments } from "@/lib/db/schema";
+import { eq, and, gte, lte } from "drizzle-orm";
 import { generateSlots } from "@/lib/scheduling/slot-generator";
 import { z } from "zod";
+import { startOfDay, endOfDay } from "date-fns";
 
 const querySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  serviceId: z.string().uuid().or(z.string()), // UUID or mock ID e.g. 's1'
+  serviceId: z.string().uuid(),
 });
 
 export async function GET(
@@ -24,17 +27,34 @@ export async function GET(
   }
 
   const { date, serviceId } = validated.data;
-  const branch = await mockDb.getBranchById(branchId);
-  if (!branch) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
 
-  const service = await mockDb.getServiceById(serviceId);
+  // Fetch branch and service in parallel
+  const [branch, service] = await Promise.all([
+    db.query.branches.findFirst({
+      where: eq(branches.id, branchId),
+    }),
+    db.query.services.findFirst({
+      where: eq(services.id, serviceId),
+    }),
+  ]);
+
+  if (!branch) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
   if (!service) return NextResponse.json({ error: "Service not found" }, { status: 404 });
 
   // Get booked appointments for this branch/date
-  const booked = await mockDb.getAppointmentsByBranchAndDate(branchId, date);
+  const dayStart = startOfDay(new Date(date));
+  const dayEnd = endOfDay(new Date(date));
+
+  const booked = await db.query.appointments.findMany({
+    where: and(
+      eq(appointments.branchId, branchId),
+      eq(appointments.status, "confirmed"),
+      gte(appointments.startTime, dayStart),
+      lte(appointments.startTime, dayEnd)
+    ),
+  });
 
   // Find operating hours for the specific day of week
-  // date-fns getDay() returns 0 for Sunday, 1 for Monday, etc.
   const dayOfWeek = new Date(date).getDay();
   const hours = branch.operatingHours.find(h => h.day === dayOfWeek);
 
@@ -47,10 +67,10 @@ export async function GET(
     timezone: branch.timezone,
     operatingHours: { start: hours.open, end: hours.close },
     serviceDuration: service.duration,
-    bufferTime: 15, // Default buffer
+    bufferTime: 15,
     bookedAppointments: booked.map(b => ({
-      startTime: b.startTime,
-      endTime: b.endTime,
+      startTime: b.startTime.toISOString(),
+      endTime: b.endTime.toISOString(),
     })),
   });
 

@@ -55,7 +55,7 @@ function MapUpdater({ branches }: { branches: MarketplaceResult[] }) {
   return null;
 }
 
-export default function DiscoveryMap({ branches, onSearch, center = [40.7128, -74.0060] }: DiscoveryMapProps) {
+export default function DiscoveryMap({ branches, onSearch, center = [7.0084, 125.0139] }: DiscoveryMapProps) {
   return (
     <div className="w-full h-full relative z-0">
       <MapContainer 

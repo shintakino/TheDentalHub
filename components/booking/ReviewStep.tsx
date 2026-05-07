@@ -112,7 +112,7 @@ export function ReviewStep({
           </button>
         ) : (
           <Link
-            href={`/${tenantSlug}/sign-in?redirect_url=/${tenantSlug}?step=review&serviceId=${serviceId}&branchId=${branchId}&date=${date}&time=${time}`}
+            href={`/${tenantSlug}/sign-in?redirect_url=/${tenantSlug}/book?step=review&serviceId=${serviceId}&branchId=${branchId}&date=${date}&time=${time}`}
             className="block w-full text-center py-4 rounded-2xl bg-primary text-white text-lg font-bold shadow-xl shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98]"
           >
             Sign in to Complete Booking
@@ -123,7 +123,7 @@ export function ReviewStep({
         </p>
       </div>
       
-      <Link href={`/${tenantSlug}?step=time&serviceId=${serviceId}&branchId=${branchId}`} className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest gap-2">
+      <Link href={`/${tenantSlug}/book?step=time&serviceId=${serviceId}&branchId=${branchId}`} className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest gap-2">
         ← Back to times
       </Link>
     </div>

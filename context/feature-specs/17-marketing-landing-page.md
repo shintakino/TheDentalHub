@@ -19,16 +19,16 @@ Design and implement a high-converting, highly-performant marketing landing page
 4. **Strict Typing**: The `any` type remains forbidden. Any static content structures or search form inputs must be typed.
 
 ## Tasks
-- [ ] Task 1: Update routing so `app/page.tsx` is the Marketing Landing Page, and move the Marketplace Map (if it was on the root) to `app/search/page.tsx`. → Verify: Navigating to `/` shows the marketing site, `/search` shows the map.
-- [ ] Task 2: Implement the Next.js `generateMetadata` function in `layout.tsx` or `page.tsx` with dynamic, strict-typed SEO tags. → Verify: Meta tags render correctly in the document head.
-- [ ] Task 3: Build the Hero section and search bar component. The search bar should not execute DB queries; it should act as a router push with URL parameters to the `/search` page. → Verify: Typing "London" and hitting enter pushes to `/search?location=London`.
-- [ ] Task 4: Build the Provider CTA section ensuring the URL parameters securely route to the B2B onboarding flow. → Verify: Clicking "List your Clinic" navigates to the correct signup route.
-- [ ] Task 5: Run a full type check. → Verify: `npm run build` completes successfully with zero instances of `any`.
+- [x] Task 1: Update routing so `app/page.tsx` is the Marketing Landing Page, and move the Marketplace Map (if it was on the root) to `app/search/page.tsx`. → Verify: Navigating to `/` shows the marketing site, `/search` shows the map.
+- [x] Task 2: Implement the Next.js `generateMetadata` function in `layout.tsx` or `page.tsx` with dynamic, strict-typed SEO tags. → Verify: Meta tags render correctly in the document head.
+- [x] Task 3: Build the Hero section and search bar component. The search bar should not execute DB queries; it should act as a router push with URL parameters to the `/search` page. → Verify: Typing "London" and hitting enter pushes to `/search?location=London`.
+- [x] Task 4: Build the Provider CTA section ensuring the URL parameters securely route to the B2B onboarding flow. → Verify: Clicking "List your Clinic" navigates to the correct signup route.
+- [x] Task 5: Run a full type check. → Verify: `npm run build` completes successfully with zero instances of `any`.
 
 ## Done When
-- [ ] The root URL serves a fast, SEO-optimized marketing page.
-- [ ] The "High-End Clinical" design system is strictly adhered to.
-- [ ] Patients can initiate a search that drops them into the Marketplace.
-- [ ] Clinic Owners have a clear path to the Onboarding flow.
-- [ ] End-to-end strict typing is implemented without using `any`.
-- [ ] `npm run build` for verification completes without errors.
+- [x] The root URL serves a fast, SEO-optimized marketing page.
+- [x] The "High-End Clinical" design system is strictly adhered to.
+- [x] Patients can initiate a search that drops them into the Marketplace.
+- [x] Clinic Owners have a clear path to the Onboarding flow.
+- [x] End-to-end strict typing is implemented without using `any`.
+- [x] `npm run build` for verification completes without errors.

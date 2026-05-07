@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mockDb } from "@/lib/db/mock-db";
+import { db } from "@/lib/db";
+import { clinics } from "@/lib/db/schema";
+import { ilike, or } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const query = searchParams.get("query") || undefined;
+    const query = searchParams.get("query") || "";
     
-    // In a real implementation, we'd use lat/lng for geospatial sorting
-    // For the mock, we just filter by text query
-    const results = await mockDb.searchClinics(query);
+    const results = await db.query.clinics.findMany({
+      where: query ? or(
+        ilike(clinics.name, `%${query}%`),
+        ilike(clinics.subdomain, `%${query}%`)
+      ) : undefined,
+      with: {
+        branches: true,
+      },
+    });
     
     return NextResponse.json(results);
   } catch (error) {

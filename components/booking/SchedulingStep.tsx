@@ -34,7 +34,7 @@ export function SchedulingStep({
     params.set("step", "review");
     params.set("date", format(date!, "yyyy-MM-dd"));
     params.set("time", time);
-    router.push(`/${tenantSlug}?${params.toString()}`);
+    router.push(`/${tenantSlug}/book?${params.toString()}`);
   };
 
   return (
@@ -77,7 +77,7 @@ export function SchedulingStep({
           </div>
         </div>
       </div>
-      <Link href={`/${tenantSlug}?step=branch&serviceId=${serviceId}`} className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest gap-2">
+      <Link href={`/${tenantSlug}/book?step=branch&serviceId=${serviceId}`} className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest gap-2">
         ← Back
       </Link>
     </div>
