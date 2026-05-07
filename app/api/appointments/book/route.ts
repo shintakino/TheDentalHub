@@ -78,7 +78,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ appointment });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: err.message === "Slot already booked" ? 409 : 500 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json(
+      { error: message }, 
+      { status: message === "Slot already booked" ? 409 : 500 }
+    );
   }
 }

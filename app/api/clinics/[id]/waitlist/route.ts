@@ -22,7 +22,8 @@ export async function GET(
 
     let whereClause = eq(waitlistEntries.tenantId, tenantId);
     if (branchId) {
-      whereClause = and(whereClause, eq(waitlistEntries.branchId, branchId)) as any;
+      // @ts-ignore - Drizzle typed SQL re-assignment can be tricky with complex 'and' conditions
+      whereClause = and(whereClause, eq(waitlistEntries.branchId, branchId));
     }
 
     const entries = await db.query.waitlistEntries.findMany({

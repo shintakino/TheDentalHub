@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { staff } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, InferSelectModel } from "drizzle-orm";
 import { auth, createClerkClient } from "@clerk/nextjs/server";
 
 const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+
+type StaffMember = InferSelectModel<typeof staff>;
 
 export async function GET(
   request: NextRequest,
@@ -48,7 +50,7 @@ export async function GET(
         // Refresh staffInfo for the final mapping if we added someone
         // Or just push to local staffInfo array if we want to avoid another query
         staffInfo.push({
-          id: "", // We don't have the generated UUID here easily without returning, but we only need it for the find
+          id: "", 
           tenantId,
           userId,
           name: (membership.publicUserData?.firstName || "") + " " + (membership.publicUserData?.lastName || ""),
@@ -56,7 +58,7 @@ export async function GET(
           targetDailyHours: 8,
           createdAt: new Date(),
           updatedAt: new Date(),
-        } as any);
+        } as StaffMember);
       }
     }
 

@@ -4,6 +4,7 @@ import { branches, services, appointments, staffAssignments, branchOverrides } f
 import { eq, and, gte, lte, or } from "drizzle-orm";
 import { generateSlots } from "@/lib/scheduling/slot-generator";
 import { getNextBestSlots } from "@/lib/scheduling/smart-router";
+import { Suggestion } from "@/lib/validations";
 import { z } from "zod";
 import { startOfDay, endOfDay, parse } from "date-fns";
 import { toDate } from "date-fns-tz";
@@ -105,7 +106,7 @@ export async function GET(
     })),
   });
 
-  let suggestions: any[] = [];
+  let suggestions: Suggestion[] = [];
   if (slots.length === 0) {
     suggestions = await getNextBestSlots(branch.tenantId, branchId, date, serviceId);
   }

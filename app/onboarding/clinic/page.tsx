@@ -46,9 +46,20 @@ export default function ClinicOnboardingPage() {
       toast.success("Clinic created successfully!");
       // Redirect to the settings page
       router.push(`/manage/${organization.id}/settings`);
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      toast.error(error.errors?.[0]?.longMessage || "Failed to create clinic. Please try again.");
+      let message = "Failed to create clinic. Please try again.";
+      
+      if (error instanceof Error) {
+        message = error.message;
+        // Check for Clerk-specific error structure
+        const clerkError = error as Error & { errors?: { longMessage: string }[] };
+        if (clerkError.errors?.[0]?.longMessage) {
+          message = clerkError.errors[0].longMessage;
+        }
+      }
+      
+      toast.error(message);
       setIsLoading(false);
     }
   }
