@@ -8,6 +8,7 @@ import BookingConfirmationEmail from "@/emails/BookingConfirmation";
 import AppointmentReminderEmail from "@/emails/AppointmentReminder";
 import CancellationNoticeEmail from "@/emails/CancellationNotice";
 import WaitlistOfferEmail from "@/emails/WaitlistOffer";
+import FeedbackRequestEmail from "@/emails/FeedbackRequest";
 
 export const notificationTriggers = {
   async triggerWaitlistOffer(entryId: string, appointmentDate: Date) {
@@ -122,6 +123,29 @@ export const notificationTriggers = {
         serviceName: service.name,
       }),
       templateName: "AppointmentReminder",
+      appointmentId,
+      tenantId: appointment.tenantId,
+    });
+  },
+
+  async triggerFeedbackRequest(appointmentId: string) {
+    const data = await this.getAppointmentNotificationData(appointmentId);
+    if (!data || !data.appointment.patientEmail) return;
+
+    const { appointment, clinic } = data;
+    const to = appointment.patientEmail!;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    await notificationSender.sendEmail({
+      to,
+      subject: `How was your visit to ${clinic.name}?`,
+      template: React.createElement(FeedbackRequestEmail, {
+        patientName: appointment.patientName,
+        clinicName: clinic.name,
+        appointmentId,
+        baseUrl,
+      }),
+      templateName: "FeedbackRequest",
       appointmentId,
       tenantId: appointment.tenantId,
     });

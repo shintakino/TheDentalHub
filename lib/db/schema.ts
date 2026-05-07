@@ -190,8 +190,18 @@ export const patientProfiles = pgTable("patient_profiles", {
 export const loyaltyTransactions = pgTable("loyalty_transactions", {
   id: uuid("id").defaultRandom().primaryKey(),
   patientId: uuid("patient_id").notNull().references(() => patientProfiles.id, { onDelete: 'cascade' }),
+  appointmentId: uuid("appointment_id").references(() => appointments.id, { onDelete: 'set null' }),
   amount: integer("amount").notNull(), // Positive for earned, negative for redeemed
   reason: text("reason").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const reviews = pgTable("reviews", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
+  appointmentId: uuid("appointment_id").notNull().references(() => appointments.id, { onDelete: 'cascade' }),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -201,6 +211,7 @@ export const clinicsRelations = relations(clinics, ({ many }) => ({
   appointments: many(appointments),
   waitlistEntries: many(waitlistEntries),
   overrides: many(branchOverrides),
+  reviews: many(reviews),
 }));
 
 export const branchesRelations = relations(branches, ({ one, many }) => ({
@@ -218,7 +229,7 @@ export const servicesRelations = relations(services, ({ many }) => ({
   waitlistEntries: many(waitlistEntries),
 }));
 
-export const appointmentsRelations = relations(appointments, ({ one }) => ({
+export const appointmentsRelations = relations(appointments, ({ one, many }) => ({
   clinic: one(clinics, {
     fields: [appointments.tenantId],
     references: [clinics.tenantId],
@@ -230,6 +241,11 @@ export const appointmentsRelations = relations(appointments, ({ one }) => ({
   service: one(services, {
     fields: [appointments.serviceId],
     references: [services.id],
+  }),
+  loyaltyTransactions: many(loyaltyTransactions),
+  review: one(reviews, {
+    fields: [appointments.id],
+    references: [reviews.appointmentId],
   }),
 }));
 
@@ -303,5 +319,20 @@ export const loyaltyTransactionsRelations = relations(loyaltyTransactions, ({ on
   patientProfile: one(patientProfiles, {
     fields: [loyaltyTransactions.patientId],
     references: [patientProfiles.id],
+  }),
+  appointment: one(appointments, {
+    fields: [loyaltyTransactions.appointmentId],
+    references: [appointments.id],
+  }),
+}));
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  clinic: one(clinics, {
+    fields: [reviews.tenantId],
+    references: [clinics.tenantId],
+  }),
+  appointment: one(appointments, {
+    fields: [reviews.appointmentId],
+    references: [appointments.id],
   }),
 }));

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { ReviewToast } from "./ReviewToast";
 
 async function getAppointments(userId: string) {
   return await db.query.appointments.findMany({
@@ -48,6 +49,7 @@ export default async function PatientDashboard() {
 
   return (
     <div className="space-y-6">
+      <ReviewToast />
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold font-heading">My Appointments</h1>
