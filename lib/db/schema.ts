@@ -49,6 +49,7 @@ export const services = pgTable("services", {
   tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
   name: text("name").notNull(),
   duration: integer("duration").notNull(), // Duration in minutes
+  price: decimal("price", { precision: 10, scale: 2 }).default("0.00").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -110,6 +111,7 @@ export const appointments = pgTable("appointments", {
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
   status: text("status", { enum: appointmentStatusEnum }).default("confirmed").notNull(),
+  actualPrice: decimal("actual_price", { precision: 10, scale: 2 }),
   isWalkIn: boolean("is_walk_in").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
