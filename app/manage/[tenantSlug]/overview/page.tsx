@@ -81,6 +81,7 @@ export default async function DashboardPage({
     patientName: app.patientName,
     startTime: app.startTime.toISOString(),
     status: app.status,
+    riskScore: app.riskScore,
   }));
 
   const formattedActivities: Activity[] = filteredLogs.map(log => ({

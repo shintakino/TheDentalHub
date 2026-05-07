@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AppointmentStateMachine } from "@/lib/appointments/state-machine";
 import { AppointmentStatus } from "@/lib/db/schema";
+import { AlertCircle, Send } from "lucide-react";
 
 import {
   Dialog,
@@ -24,6 +25,7 @@ interface Appointment {
   patientName: string;
   startTime: string;
   status: AppointmentStatus;
+  riskScore: string;
 }
 
 export function DailySchedule({ initialAppointments }: { initialAppointments: Appointment[] }) {
@@ -113,16 +115,25 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
         <div className="grid gap-6">
           {appointments.map((app) => {
             const validNextStates = AppointmentStateMachine.getValidNextStates(app.status);
+            const isHighRisk = parseFloat(app.riskScore) >= 3;
             
             return (
-              <Card key={app.id} className="p-8 border-none shadow-[0_4px_32px_rgba(0,0,0,0.06)] bg-white transition-all hover:shadow-[0_4px_48px_rgba(0,0,0,0.08)]">
+              <Card key={app.id} className={`p-8 border-none shadow-[0_4px_32px_rgba(0,0,0,0.06)] bg-white transition-all hover:shadow-[0_4px_48px_rgba(0,0,0,0.08)] ${isHighRisk ? 'ring-1 ring-rose-200' : ''}`}>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <h3 className="font-playfair text-2xl font-medium text-obsidian">{app.patientName}</h3>
-                      <Badge className={`${getStatusColor(app.status)} font-outfit font-medium border-none px-3 py-1 uppercase tracking-wider text-[10px]`} variant="secondary">
-                        {app.status.replace("_", " ")}
-                      </Badge>
+                      <div className="flex gap-2">
+                        <Badge className={`${getStatusColor(app.status)} font-outfit font-medium border-none px-3 py-1 uppercase tracking-wider text-[10px]`} variant="secondary">
+                          {app.status.replace("_", " ")}
+                        </Badge>
+                        {isHighRisk && (
+                          <Badge className="bg-rose-500 text-white font-outfit font-medium border-none px-3 py-1 uppercase tracking-wider text-[10px] animate-pulse flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            High Risk
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <p className="text-slate-500 font-outfit tabular-nums text-lg font-light tracking-tight">
                       {new Date(app.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
@@ -130,6 +141,19 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
                   </div>
                   
                   <div className="flex flex-wrap gap-3 sm:justify-end">
+                    {isHighRisk && app.status === "confirmed" && (
+                      <Button 
+                        size="lg" 
+                        variant="secondary"
+                        className="bg-amber-100 text-amber-700 hover:bg-amber-200 font-outfit font-medium px-6 flex items-center gap-2 border-none transition-all active:scale-95"
+                        onClick={() => {
+                          toast.success("Extra reminder SMS sent to patient");
+                        }}
+                      >
+                        <Send className="h-4 w-4" />
+                        Send Extra Reminder
+                      </Button>
+                    )}
                     {app.status === "in_progress" && (
                       <Button 
                         size="lg" 
