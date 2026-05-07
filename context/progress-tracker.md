@@ -50,9 +50,15 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Created Predictive Operations & AI Insights specification (29-predictive-operations-ai.md)
 - [x] Created Clinical Inventory & Supply Chain Management specification (30-inventory-management.md)
 
+- [x] Implemented Branch Autonomy & Clinic-Wide Intelligence (26-branch-autonomy-clinic-intelligence.md)
+- [x] Implemented Patient Engagement & Loyalty System (27-patient-engagement-loyalty.md)
+- [x] Implemented Financial Intelligence & Billing (MVP) (28-financial-intelligence-billing.md)
+
+- [x] Implemented Predictive Operations & AI Insights (29-predictive-operations-ai.md)
+
 ## In Progress
 
-- [ ] Implemented Branch Autonomy & Clinic-Wide Intelligence (26-branch-autonomy-clinic-intelligence.md)
+None.
 
 ## Open Questions
 
