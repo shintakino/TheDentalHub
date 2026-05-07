@@ -9,6 +9,8 @@ export type Appointment = InferSelectModel<typeof appointments>;
 export type WaitlistEntry = InferSelectModel<typeof waitlistEntries>;
 export type BranchOverride = InferSelectModel<typeof branchOverrides>;
 export type StaffAssignment = InferSelectModel<typeof staffAssignments>;
+export type PatientProfile = InferSelectModel<typeof patientProfiles>;
+export type LoyaltyTransaction = InferSelectModel<typeof loyaltyTransactions>;
 
 export const clinics = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -176,6 +178,23 @@ export const branchOverrides = pgTable("branch_overrides", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const patientProfiles = pgTable("patient_profiles", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull().unique(), // Clerk user ID
+  loyaltyPoints: integer("loyalty_points").default(0).notNull(),
+  preferences: jsonb("preferences").$type<{ email_marketing: boolean; sms_reminders: boolean }>().default({ email_marketing: true, sms_reminders: true }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const loyaltyTransactions = pgTable("loyalty_transactions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  patientId: uuid("patient_id").notNull().references(() => patientProfiles.id, { onDelete: 'cascade' }),
+  amount: integer("amount").notNull(), // Positive for earned, negative for redeemed
+  reason: text("reason").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const clinicsRelations = relations(clinics, ({ many }) => ({
   branches: many(branches),
@@ -273,5 +292,16 @@ export const branchOverridesRelations = relations(branchOverrides, ({ one }) => 
   branch: one(branches, {
     fields: [branchOverrides.branchId],
     references: [branches.id],
+  }),
+}));
+
+export const patientProfilesRelations = relations(patientProfiles, ({ many }) => ({
+  loyaltyTransactions: many(loyaltyTransactions),
+}));
+
+export const loyaltyTransactionsRelations = relations(loyaltyTransactions, ({ one }) => ({
+  patientProfile: one(patientProfiles, {
+    fields: [loyaltyTransactions.patientId],
+    references: [patientProfiles.id],
   }),
 }));
