@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { branches, services, appointments } from "@/lib/db/schema";
+import { branches, services, appointments, staffAssignments } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { generateSlots } from "@/lib/scheduling/slot-generator";
 import { z } from "zod";
-import { startOfDay, endOfDay } from "date-fns";
+import { startOfDay, endOfDay, parse } from "date-fns";
+import { toDate } from "date-fns-tz";
 
 const querySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -28,13 +29,19 @@ export async function GET(
 
   const { date, serviceId } = validated.data;
 
-  // Fetch branch and service in parallel
-  const [branch, service] = await Promise.all([
+  // Fetch branch, service, and staff assignments in parallel
+  const [branch, service, dayAssignments] = await Promise.all([
     db.query.branches.findFirst({
       where: eq(branches.id, branchId),
     }),
     db.query.services.findFirst({
       where: eq(services.id, serviceId),
+    }),
+    db.query.staffAssignments.findMany({
+      where: and(
+        eq(staffAssignments.branchId, branchId),
+        eq(staffAssignments.dayOfWeek, new Date(date).getDay())
+      ),
     }),
   ]);
 
@@ -62,6 +69,16 @@ export async function GET(
     return NextResponse.json({ slots: [] });
   }
 
+  // Convert staff assignments to ISO strings for the generator
+  const staffWorking = dayAssignments.map(as => {
+    const startString = `${date}T${as.startTime}:00`;
+    const endString = `${date}T${as.endTime}:00`;
+    return {
+      startTime: toDate(startString, { timeZone: branch.timezone }).toISOString(),
+      endTime: toDate(endString, { timeZone: branch.timezone }).toISOString(),
+    };
+  });
+
   const slots = generateSlots({
     date,
     timezone: branch.timezone,
@@ -72,6 +89,8 @@ export async function GET(
       startTime: b.startTime.toISOString(),
       endTime: b.endTime.toISOString(),
     })),
+    maxCapacity: branch.maxCapacity,
+    staffAssignments: staffWorking,
   });
 
   return NextResponse.json({ slots });
