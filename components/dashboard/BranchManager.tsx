@@ -56,6 +56,7 @@ interface Branch {
   address: string | null;
   timezone: string;
   operatingHours: OperatingHour[];
+  maxCapacity: number;
   isActive: boolean;
   latitude: string | null;
   longitude: string | null;
@@ -224,6 +225,7 @@ export function BranchManager({ tenantId }: { tenantId: string }) {
             <TableRow className="border-slate-50 hover:bg-transparent bg-slate-50/30">
               <TableHead className="font-outfit font-semibold text-slate-600 py-6 pl-8">Location</TableHead>
               <TableHead className="font-outfit font-semibold text-slate-600 py-6">Operational Status</TableHead>
+              <TableHead className="font-outfit font-semibold text-slate-600 py-6">Capacity</TableHead>
               <TableHead className="font-outfit font-semibold text-slate-600 py-6">Availability</TableHead>
               <TableHead className="font-outfit font-semibold text-slate-600 py-6 text-right pr-8">Management</TableHead>
             </TableRow>
@@ -275,6 +277,13 @@ export function BranchManager({ tenantId }: { tenantId: string }) {
                           <Clock className="w-3 h-3" />
                           {branch.timezone}
                         </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="border-slate-200 text-slate-600 font-outfit">
+                          {branch.maxCapacity} {branch.maxCapacity === 1 ? 'Chair' : 'Chairs'}
+                        </Badge>
                       </div>
                     </TableCell>
                     <TableCell className="py-6">

@@ -43,12 +43,14 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
       address: initialData.address || "",
       timezone: initialData.timezone,
       operatingHours: initialData.operatingHours,
+      maxCapacity: initialData.maxCapacity ?? 1,
       isActive: initialData.isActive ?? true,
     } : {
       name: "",
       address: "",
       timezone: "UTC",
       operatingHours: defaultOperatingHours,
+      maxCapacity: 1,
       isActive: true,
     },
   });
@@ -116,6 +118,28 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="maxCapacity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-outfit text-slate-600">Physical Capacity (Chairs)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min={1}
+                    className="rounded-xl h-11 border-slate-200 focus:border-primary transition-all" 
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
           <FormField
             control={form.control}
             name="timezone"

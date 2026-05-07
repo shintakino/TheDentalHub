@@ -3,6 +3,7 @@ import { getTenantId } from "@/lib/db/tenant";
 import { BranchManager } from "@/components/dashboard/BranchManager";
 import { ServicesTab } from "@/components/dashboard/settings/ServicesTab";
 import { StaffTab } from "@/components/dashboard/settings/StaffTab";
+import { StaffRoster } from "@/components/dashboard/StaffRoster";
 
 export default async function SettingsPage() {
   const tenantId = await getTenantId();
@@ -34,6 +35,12 @@ export default async function SettingsPage() {
           >
             Staff
           </TabsTrigger>
+          <TabsTrigger 
+            value="roster" 
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
+          >
+            Roster
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="branches" className="mt-6 border-none p-0 outline-none">
@@ -44,6 +51,9 @@ export default async function SettingsPage() {
         </TabsContent>
         <TabsContent value="staff" className="mt-6 border-none p-0 outline-none">
           <StaffTab tenantId={tenantId} />
+        </TabsContent>
+        <TabsContent value="roster" className="mt-6 border-none p-0 outline-none">
+          <StaffRoster tenantId={tenantId} />
         </TabsContent>
       </Tabs>
     </div>

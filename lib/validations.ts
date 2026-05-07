@@ -54,7 +54,16 @@ export const branchSchema = z.object({
     close: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
     active: z.boolean()
   })),
+  maxCapacity: z.number().int().min(1, "Capacity must be at least 1"),
   isActive: z.boolean()
+});
+
+export const staffAssignmentSchema = z.object({
+  staffId: z.string().uuid("Invalid staff ID"),
+  branchId: z.string().uuid("Invalid branch ID"),
+  dayOfWeek: z.number().min(0).max(6),
+  startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
+  endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/)
 });
 
 export const serviceSchema = z.object({
@@ -96,3 +105,4 @@ export type AnalyticsResponse = z.infer<typeof analyticsResponseSchema>;
 export type BranchPayload = z.infer<typeof branchSchema>;
 export type ServicePayload = z.infer<typeof serviceSchema>;
 export type InviteStaffPayload = z.infer<typeof inviteStaffSchema>;
+export type StaffAssignmentPayload = z.infer<typeof staffAssignmentSchema>;

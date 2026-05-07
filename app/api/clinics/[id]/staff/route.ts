@@ -63,11 +63,11 @@ export async function GET(
     const staffList = memberships.data.map((membership) => {
       const dbInfo = staffInfo.find((s) => s.userId === membership.publicUserData?.userId);
       return {
-        id: membership.id,
+        id: dbInfo?.id || membership.id,
         userId: membership.publicUserData?.userId,
         name: membership.publicUserData?.firstName + " " + membership.publicUserData?.lastName,
         email: membership.publicUserData?.identifier,
-        role: membership.role,
+        role: dbInfo?.role || (membership.role === "org:admin" ? "admin" : "dentist"),
         targetDailyHours: dbInfo?.targetDailyHours || 8,
         joinedAt: membership.createdAt,
       };
