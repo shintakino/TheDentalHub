@@ -15,6 +15,8 @@ import { BaseEmail } from "./components/BaseEmail";
 interface FeedbackRequestEmailProps {
   patientName: string;
   clinicName: string;
+  clinicLogoUrl?: string | null;
+  primaryColor: string;
   appointmentId: string;
   baseUrl: string;
 }
@@ -22,13 +24,20 @@ interface FeedbackRequestEmailProps {
 export const FeedbackRequestEmail = ({
   patientName,
   clinicName,
+  clinicLogoUrl,
+  primaryColor,
   appointmentId,
   baseUrl,
 }: FeedbackRequestEmailProps) => {
   const previewText = `How was your visit to ${clinicName}?`;
 
   return (
-    <BaseEmail previewText={previewText}>
+    <BaseEmail 
+      previewText={previewText}
+      clinicName={clinicName}
+      clinicLogoUrl={clinicLogoUrl}
+      primaryColor={primaryColor}
+    >
       <Section className="my-8">
         <Heading className="text-2xl font-bold font-heading text-slate-900">
           How did we do?

@@ -142,6 +142,8 @@ export const notificationTriggers = {
       template: React.createElement(FeedbackRequestEmail, {
         patientName: appointment.patientName,
         clinicName: clinic.name,
+        clinicLogoUrl: clinic.logoUrl,
+        primaryColor: clinic.primaryColor || "#0047FF",
         appointmentId,
         baseUrl,
       }),
