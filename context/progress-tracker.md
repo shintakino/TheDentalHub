@@ -42,10 +42,17 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Implemented Multi-Branch Management (22-multi-branch-management.md)
 
 - [x] Implemented Advanced Resource Management (23-advanced-resource-management.md)
+- [x] Implemented Operational Resiliency & Monitoring (24-operational-resiliency.md)
+- [x] Implemented Cross-Branch Intelligence (25-cross-branch-intelligence.md)
+- [x] Created Branch Autonomy & Clinic-Wide Intelligence specification (26-branch-autonomy-clinic-intelligence.md)
+- [x] Created Patient Engagement & Loyalty System specification (27-patient-engagement-loyalty.md)
+- [x] Created Financial Intelligence & Billing specification (28-financial-intelligence-billing.md)
+- [x] Created Predictive Operations & AI Insights specification (29-predictive-operations-ai.md)
+- [x] Created Clinical Inventory & Supply Chain Management specification (30-inventory-management.md)
 
 ## In Progress
 
-- [ ] Implementing Operational Resiliency & Monitoring (24-operational-resiliency.md)
+None.
 
 ## Open Questions
 
