@@ -45,7 +45,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-None.
+- [ ] Implementing Operational Resiliency & Monitoring (24-operational-resiliency.md)
 
 ## Open Questions
 

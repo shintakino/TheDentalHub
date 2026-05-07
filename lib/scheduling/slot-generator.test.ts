@@ -156,4 +156,36 @@ describe("generateSlots", () => {
     expect(slots).toHaveLength(1);
     expect(slots[0].startTime).toBe("2026-05-10T09:00:00.000Z");
   });
+
+  it("should respect branch overrides (blackouts)", () => {
+    const params: SlotGeneratorParams = {
+      date: "2026-05-10",
+      timezone: "UTC",
+      operatingHours: { start: "09:00", end: "11:00" },
+      serviceDuration: 30,
+      bufferTime: 0,
+      bookedAppointments: [],
+      maxCapacity: 1,
+      staffAssignments: [
+        {
+          startTime: "2026-05-10T09:00:00.000Z",
+          endTime: "2026-05-10T11:00:00.000Z",
+        }
+      ],
+      overrides: [
+        {
+          startTime: "2026-05-10T09:30:00.000Z",
+          endTime: "2026-05-10T10:30:00.000Z",
+          isClosed: true
+        }
+      ]
+    };
+
+    const slots = generateSlots(params);
+    // Should have 09:00-09:30 and 10:30-11:00
+    // 09:30-10:00 and 10:00-10:30 are blocked
+    expect(slots).toHaveLength(2);
+    expect(slots[0].startTime).toBe("2026-05-10T09:00:00.000Z");
+    expect(slots[1].startTime).toBe("2026-05-10T10:30:00.000Z");
+  });
 });

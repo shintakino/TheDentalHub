@@ -155,11 +155,24 @@ export const communicationsLog = pgTable("communications_log", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const branchOverrides = pgTable("branch_overrides", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
+  branchId: uuid("branch_id").notNull().references(() => branches.id, { onDelete: 'cascade' }),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  reason: text("reason").notNull(),
+  isClosed: boolean("is_closed").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const clinicsRelations = relations(clinics, ({ many }) => ({
   branches: many(branches),
   appointments: many(appointments),
   waitlistEntries: many(waitlistEntries),
+  overrides: many(branchOverrides),
 }));
 
 export const branchesRelations = relations(branches, ({ one, many }) => ({
@@ -169,6 +182,7 @@ export const branchesRelations = relations(branches, ({ one, many }) => ({
   }),
   appointments: many(appointments),
   waitlistEntries: many(waitlistEntries),
+  overrides: many(branchOverrides),
 }));
 
 export const servicesRelations = relations(services, ({ many }) => ({
@@ -239,5 +253,16 @@ export const communicationsLogRelations = relations(communicationsLog, ({ one })
   appointment: one(appointments, {
     fields: [communicationsLog.appointmentId],
     references: [appointments.id],
+  }),
+}));
+
+export const branchOverridesRelations = relations(branchOverrides, ({ one }) => ({
+  clinic: one(clinics, {
+    fields: [branchOverrides.tenantId],
+    references: [clinics.tenantId],
+  }),
+  branch: one(branches, {
+    fields: [branchOverrides.branchId],
+    references: [branches.id],
   }),
 }));

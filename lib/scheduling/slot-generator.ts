@@ -16,6 +16,12 @@ export interface StaffAssignment {
   endTime: string; // ISO string
 }
 
+export interface Override {
+  startTime: string; // ISO string
+  endTime: string; // ISO string
+  isClosed: boolean;
+}
+
 export interface SlotGeneratorParams {
   date: string; // "YYYY-MM-DD"
   timezone: string;
@@ -25,6 +31,7 @@ export interface SlotGeneratorParams {
   bookedAppointments: Appointment[];
   maxCapacity: number;
   staffAssignments: StaffAssignment[];
+  overrides: Override[];
 }
 
 export interface AvailableSlot {
@@ -41,6 +48,7 @@ export function generateSlots({
   bookedAppointments,
   maxCapacity,
   staffAssignments,
+  overrides = [],
 }: SlotGeneratorParams): AvailableSlot[] {
   const availableSlots: AvailableSlot[] = [];
 
@@ -64,6 +72,13 @@ export function generateSlots({
     endTime: parseISO(as.endTime),
   }));
 
+  // Map overrides to Date objects
+  const overrideDates = overrides.map(o => ({
+    startTime: parseISO(o.startTime),
+    endTime: parseISO(o.endTime),
+    isClosed: o.isClosed
+  }));
+
   let currentSlotStart = dayStart;
 
   while (isBefore(currentSlotStart, dayEnd)) {
@@ -75,6 +90,12 @@ export function generateSlots({
 
     // Helper to check capacity and staff at any given time
     const isAvailableAt = (start: Date, end: Date) => {
+      // Check for overrides (blackouts)
+      const isOverridden = overrideDates.some(o => 
+        o.isClosed && (isBefore(start, o.endTime) && isAfter(end, o.startTime))
+      );
+      if (isOverridden) return false;
+
       // Check physical capacity: at any point in [start, end], 
       // count of overlapping bookings must be < maxCapacity
       // To be precise, we check if adding one more booking would exceed capacity.
