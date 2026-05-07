@@ -19,13 +19,17 @@ export function SchedulingStep({
   const searchParams = useSearchParams();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [slots, setSlots] = useState<{ startTime: string; endTime: string }[]>([]);
+  const [suggestions, setSuggestions] = useState<{ branchId: string; branchName: string; distance: string; nextSlot: string }[]>([]);
 
   useEffect(() => {
     if (date) {
       const dateStr = format(date, "yyyy-MM-dd");
       fetch(`/api/branches/${branchId}/slots?date=${dateStr}&serviceId=${serviceId}`)
         .then(res => res.json())
-        .then(data => setSlots(data.slots || []));
+        .then(data => {
+          setSlots(data.slots || []);
+          setSuggestions(data.suggestions || []);
+        });
     }
   }, [date, branchId, serviceId]);
 
@@ -34,6 +38,12 @@ export function SchedulingStep({
     params.set("step", "review");
     params.set("date", format(date!, "yyyy-MM-dd"));
     params.set("time", time);
+    router.push(`/${tenantSlug}/book?${params.toString()}`);
+  };
+
+  const switchToBranch = (newBranchId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("branchId", newBranchId);
     router.push(`/${tenantSlug}/book?${params.toString()}`);
   };
 
@@ -71,7 +81,33 @@ export function SchedulingStep({
                 );
               })}
               {slots.length === 0 && (
-                <p className="text-sm text-muted-foreground">No available slots for this date.</p>
+                <div className="col-span-2 space-y-6">
+                  <p className="text-sm text-muted-foreground">No available slots for this date.</p>
+                  
+                  {suggestions.length > 0 && (
+                    <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4 animate-in fade-in zoom-in duration-500">
+                      <p className="text-sm font-semibold text-blue-900 flex items-center gap-2">
+                        <span className="text-lg">✨</span>
+                        Alternative availability nearby
+                      </p>
+                      <div className="space-y-4">
+                        {suggestions.map((s) => (
+                          <div key={s.branchId} className="space-y-2">
+                            <p className="text-xs text-blue-700 leading-relaxed">
+                              <b>{s.branchName}</b> ({s.distance} miles away) has a {format(new Date(s.nextSlot), "p")} available.
+                            </p>
+                            <button
+                              onClick={() => switchToBranch(s.branchId)}
+                              className="w-full py-2.5 bg-white border border-blue-200 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                            >
+                              Switch to {s.branchName}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

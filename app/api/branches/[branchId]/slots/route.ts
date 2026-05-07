@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { branches, services, appointments, staffAssignments, branchOverrides } from "@/lib/db/schema";
 import { eq, and, gte, lte, or } from "drizzle-orm";
 import { generateSlots } from "@/lib/scheduling/slot-generator";
+import { getNextBestSlots } from "@/lib/scheduling/smart-router";
 import { z } from "zod";
 import { startOfDay, endOfDay, parse } from "date-fns";
 import { toDate } from "date-fns-tz";
@@ -104,5 +105,10 @@ export async function GET(
     })),
   });
 
-  return NextResponse.json({ slots });
+  let suggestions: any[] = [];
+  if (slots.length === 0) {
+    suggestions = await getNextBestSlots(branch.tenantId, branchId, date, serviceId);
+  }
+
+  return NextResponse.json({ slots, suggestions });
 }

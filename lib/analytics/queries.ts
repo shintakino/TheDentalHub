@@ -1,7 +1,35 @@
 import { db } from "@/lib/db";
-import { appointments, staff, waitlistEntries } from "@/lib/db/schema";
+import { appointments, staff, waitlistEntries, branches } from "@/lib/db/schema";
 import { and, eq, gte, lte, sql, ne } from "drizzle-orm";
 import { cache } from "react";
+
+// ... (previous queries)
+
+export const getNetworkHeatmap = cache(async (tenantId: string) => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - 30);
+
+  return await db.select({
+    branchId: appointments.branchId,
+    timestamp: sql<string>`to_char(start_time, 'YYYY-MM-DD"T"HH24:00:00"Z"')`,
+    density: sql<number>`count(*)::float / ${branches.maxCapacity}`.mapWith(Number),
+    bookingCount: sql<number>`count(*)`.mapWith(Number),
+    maxCapacity: branches.maxCapacity
+  })
+  .from(appointments)
+  .innerJoin(branches, eq(branches.id, appointments.branchId))
+  .where(
+    and(
+      eq(appointments.tenantId, tenantId),
+      gte(appointments.startTime, start),
+      lte(appointments.startTime, end),
+      ne(appointments.status, "cancelled")
+    )
+  )
+  .groupBy(appointments.branchId, sql`to_char(start_time, 'YYYY-MM-DD"T"HH24:00:00"Z"')`, branches.maxCapacity)
+  .orderBy(sql`to_char(start_time, 'YYYY-MM-DD"T"HH24:00:00"Z"')`);
+});
 
 export const getAnalyticsOverview = cache(async (tenantId: string, startDate: string, endDate: string) => {
   const start = new Date(startDate);
