@@ -41,6 +41,8 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Fixed Issue 2: Booking Failure (Migrated Booking Flow to real DB)
 - [x] Implemented Multi-Branch Management (22-multi-branch-management.md)
 
+- [x] Implemented Advanced Resource Management (23-advanced-resource-management.md)
+
 ## In Progress
 
 None.
