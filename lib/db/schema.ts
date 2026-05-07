@@ -27,6 +27,7 @@ export const branches = pgTable("branches", {
   nextSlots: jsonb("next_slots").$type<string[]>().default([]).notNull(),
   availabilityUpdatedAt: timestamp("availability_updated_at"),
   rating: decimal("rating", { precision: 2, scale: 1 }).default("4.5"),
+  maxCapacity: integer("max_capacity").default(1).notNull(), // Number of chairs
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -48,6 +49,18 @@ export const staff = pgTable("staff", {
   name: text("name").notNull(),
   role: text("role").notNull(), // 'admin', 'dentist', 'receptionist', etc.
   targetDailyHours: integer("target_daily_hours").default(8).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const staffAssignments = pgTable("staff_assignments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
+  staffId: uuid("staff_id").notNull().references(() => staff.id, { onDelete: 'cascade' }),
+  branchId: uuid("branch_id").notNull().references(() => branches.id, { onDelete: 'cascade' }),
+  dayOfWeek: integer("day_of_week").notNull(), // 0-6
+  startTime: text("start_time").notNull(), // Format: "HH:mm"
+  endTime: text("end_time").notNull(), // Format: "HH:mm"
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -190,6 +203,21 @@ export const waitlistEntriesRelations = relations(waitlistEntries, ({ one }) => 
   service: one(services, {
     fields: [waitlistEntries.serviceId],
     references: [services.id],
+  }),
+}));
+
+export const staffRelations = relations(staff, ({ many }) => ({
+  assignments: many(staffAssignments),
+}));
+
+export const staffAssignmentsRelations = relations(staffAssignments, ({ one }) => ({
+  staff: one(staff, {
+    fields: [staffAssignments.staffId],
+    references: [staff.id],
+  }),
+  branch: one(branches, {
+    fields: [staffAssignments.branchId],
+    references: [branches.id],
   }),
 }));
 
