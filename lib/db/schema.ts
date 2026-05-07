@@ -208,6 +208,17 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const notifications = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(), // Recipient's Clerk ID
+  tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  importance: text("importance", { enum: ["low", "medium", "high"] }).default("low").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const clinicsRelations = relations(clinics, ({ many }) => ({
   branches: many(branches),
@@ -337,5 +348,12 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   appointment: one(appointments, {
     fields: [reviews.appointmentId],
     references: [appointments.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  clinic: one(clinics, {
+    fields: [notifications.tenantId],
+    references: [clinics.tenantId],
   }),
 }));

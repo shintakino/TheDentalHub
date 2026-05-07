@@ -81,7 +81,7 @@ export async function POST(req: Request) {
         // If high risk, trigger priority reminder immediately or schedule it
         if (prediction.isHighRisk) {
           console.log(`High risk detected for appointment ${appointment.id}. Action: ${prediction.suggestedAction}`);
-          // In a real system, we might schedule a specialized reminder here.
+          await notificationTriggers.triggerHighRiskReminder(appointment.id);
         }
       } catch (err) {
         console.error("Failed to trigger booking confirmation:", err);
