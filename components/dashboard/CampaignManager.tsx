@@ -99,7 +99,7 @@ export function CampaignManager({ tenantId }: { tenantId: string }) {
         ...formData,
         startDate: new Date(formData.startDate).toISOString(),
         endDate: new Date(formData.endDate).toISOString(),
-        serviceId: formData.serviceId || null,
+        serviceId: formData.serviceId === "all" || !formData.serviceId ? null : formData.serviceId,
         trackingCode: formData.trackingCode || formData.name.toUpperCase().replace(/\s+/g, "_")
       };
 
