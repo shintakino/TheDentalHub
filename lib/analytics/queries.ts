@@ -113,6 +113,7 @@ export const getNetworkHeatmap = cache(async (tenantId: string) => {
 
   return await db.select({
     branchId: appointments.branchId,
+    branchName: branches.name,
     timestamp: sql<string>`to_char(start_time, 'YYYY-MM-DD"T"HH24:00:00"Z"')`,
     density: sql<number>`count(*)::float / ${branches.maxCapacity}`.mapWith(Number),
     bookingCount: sql<number>`count(*)`.mapWith(Number),
@@ -128,7 +129,7 @@ export const getNetworkHeatmap = cache(async (tenantId: string) => {
       ne(appointments.status, "cancelled")
     )
   )
-  .groupBy(appointments.branchId, sql`to_char(start_time, 'YYYY-MM-DD"T"HH24:00:00"Z"')`, branches.maxCapacity)
+  .groupBy(appointments.branchId, branches.name, sql`to_char(start_time, 'YYYY-MM-DD"T"HH24:00:00"Z"')`, branches.maxCapacity)
   .orderBy(sql`to_char(start_time, 'YYYY-MM-DD"T"HH24:00:00"Z"')`);
 });
 

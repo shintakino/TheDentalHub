@@ -16,6 +16,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface HeatmapData {
   branchId: string;
+  branchName: string;
   timestamp: string;
   density: number;
   bookingCount: number;
@@ -34,15 +35,14 @@ export function NetworkHeatmap() {
   // Process data for 30 days
   const today = new Date();
   const days = eachDayOfInterval({
-    start: addDays(today, -29),
-    end: today
+    start: startOfDay(addDays(today, -29)),
+    end: startOfDay(today)
   });
 
   // Unique branches
-  const branchIds = Array.from(new Set(data?.map(d => d.branchId)));
-  
-  // We'll just show daily density for the heatmap if hourly is too dense for the grid
-  // Or we can group by day for the main grid.
+  const branches = Array.from(
+    new Map(data?.map(d => [d.branchId, d.branchName])).entries()
+  ).map(([id, name]) => ({ id, name }));
   
   const getDensityForDay = (branchId: string, day: Date) => {
     const dayStr = format(day, "yyyy-MM-dd");
@@ -80,15 +80,15 @@ export function NetworkHeatmap() {
                   </div>
                 ))}
                 
-                {branchIds.map(branchId => (
-                  <Fragment key={branchId}>
-                    <div className="text-xs font-semibold py-2 truncate pr-4 font-outfit">
-                      Branch {branchId.slice(0, 4)}...
+                {branches.map(branch => (
+                  <Fragment key={branch.id}>
+                    <div className="text-xs font-semibold py-2 truncate pr-4 font-outfit" title={branch.name}>
+                      {branch.name}
                     </div>
                     {days.map((day, i) => {
-                      const density = getDensityForDay(branchId, day);
+                      const density = getDensityForDay(branch.id, day);
                       return (
-                        <Tooltip key={`${branchId}-${i}`}>
+                        <Tooltip key={`${branch.id}-${i}`}>
                           <TooltipTrigger
                             className={cn(
                               "h-8 rounded-sm border transition-all cursor-pointer hover:ring-2 hover:ring-primary/20",
@@ -97,7 +97,7 @@ export function NetworkHeatmap() {
                           />
                           <TooltipContent>
                             <p className="font-outfit text-xs">
-                              Branch {branchId.slice(0, 4)}: {Math.round(density * 100)}% Utilization
+                              {branch.name}: {Math.round(density * 100)}% Utilization
                             </p>
                             <p className="text-[10px] text-slate-400">{format(day, "PPPP")}</p>
                           </TooltipContent>

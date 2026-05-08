@@ -64,7 +64,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-None.
+- [ ] Analytics Marketing & Intelligence Module (33-analytics-marketing-module.md)
 
 - Add unresolved product or implementation questions here.
 

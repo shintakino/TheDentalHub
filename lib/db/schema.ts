@@ -14,6 +14,7 @@ export type LoyaltyTransaction = InferSelectModel<typeof loyaltyTransactions>;
 export type InventoryItem = InferSelectModel<typeof inventoryItems>;
 export type InventoryStock = InferSelectModel<typeof inventoryStock>;
 export type InventoryLog = InferSelectModel<typeof inventoryLogs>;
+export type Campaign = InferSelectModel<typeof campaigns>;
 
 export const clinics = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -119,6 +120,7 @@ export const appointments = pgTable("appointments", {
   riskScore: decimal("risk_score", { precision: 5, scale: 2 }).default("0.00").notNull(),
   actualPrice: decimal("actual_price", { precision: 10, scale: 2 }),
   isWalkIn: boolean("is_walk_in").default(false).notNull(),
+  campaignId: uuid("campaign_id").references(() => campaigns.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -259,6 +261,30 @@ export const inventoryLogs = pgTable("inventory_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const campaignStatusEnum = ["draft", "active", "completed", "cancelled"] as const;
+export type CampaignStatus = typeof campaignStatusEnum[number];
+
+export const campaignDiscountTypeEnum = ["percentage", "fixed_amount", "none"] as const;
+export type CampaignDiscountType = typeof campaignDiscountTypeEnum[number];
+
+export const campaigns = pgTable("campaigns", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
+  name: text("name").notNull(),
+  description: text("description"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  status: text("status", { enum: campaignStatusEnum }).default("draft").notNull(),
+  discountType: text("discount_type", { enum: campaignDiscountTypeEnum }).default("none").notNull(),
+  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  serviceId: uuid("service_id").references(() => services.id, { onDelete: 'set null' }),
+  trackingCode: text("tracking_code").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (t) => ({
+  unq: unique().on(t.tenantId, t.trackingCode),
+}));
+
 // Relations
 export const clinicsRelations = relations(clinics, ({ many }) => ({
   branches: many(branches),
@@ -266,6 +292,7 @@ export const clinicsRelations = relations(clinics, ({ many }) => ({
   waitlistEntries: many(waitlistEntries),
   overrides: many(branchOverrides),
   reviews: many(reviews),
+  campaigns: many(campaigns),
 }));
 
 export const branchesRelations = relations(branches, ({ one, many }) => ({
@@ -281,6 +308,7 @@ export const branchesRelations = relations(branches, ({ one, many }) => ({
 export const servicesRelations = relations(services, ({ many }) => ({
   appointments: many(appointments),
   waitlistEntries: many(waitlistEntries),
+  campaigns: many(campaigns),
 }));
 
 export const appointmentsRelations = relations(appointments, ({ one, many }) => ({
@@ -296,11 +324,27 @@ export const appointmentsRelations = relations(appointments, ({ one, many }) => 
     fields: [appointments.serviceId],
     references: [services.id],
   }),
+  campaign: one(campaigns, {
+    fields: [appointments.campaignId],
+    references: [campaigns.id],
+  }),
   loyaltyTransactions: many(loyaltyTransactions),
   review: one(reviews, {
     fields: [appointments.id],
     references: [reviews.appointmentId],
   }),
+}));
+
+export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
+  clinic: one(clinics, {
+    fields: [campaigns.tenantId],
+    references: [clinics.tenantId],
+  }),
+  service: one(services, {
+    fields: [campaigns.serviceId],
+    references: [services.id],
+  }),
+  appointments: many(appointments),
 }));
 
 export const waitlistEntriesRelations = relations(waitlistEntries, ({ one }) => ({
