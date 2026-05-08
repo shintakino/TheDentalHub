@@ -39,6 +39,18 @@ interface CampaignStats {
   conversionRate: number;
 }
 
+interface CampaignFormData {
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  discountType: string;
+  discountValue: string;
+  serviceId: string;
+  trackingCode: string;
+}
+
 export function CampaignManager({ tenantId }: { tenantId: string }) {
   const [campaigns, setCampaigns] = useState<CampaignWithService[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -46,13 +58,13 @@ export function CampaignManager({ tenantId }: { tenantId: string }) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [stats, setStats] = useState<Record<string, CampaignStats>>({});
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CampaignFormData>({
     name: "",
     description: "",
     startDate: "",
     endDate: "",
-    status: "draft" as string,
-    discountType: "none" as string,
+    status: "draft",
+    discountType: "none",
     discountValue: "0.00",
     serviceId: "",
     trackingCode: ""
@@ -60,16 +72,27 @@ export function CampaignManager({ tenantId }: { tenantId: string }) {
 
   const fetchData = async () => {
     setLoading(true);
+    console.log("CampaignManager: Fetching data for tenantId:", tenantId);
     try {
       const [campaignsRes, servicesRes] = await Promise.all([
         fetch(`/api/clinics/${tenantId}/campaigns`),
         fetch(`/api/clinics/${tenantId}/services`)
       ]);
       
-      if (!campaignsRes.ok || !servicesRes.ok) throw new Error();
+      console.log("CampaignManager: Services Response Status:", servicesRes.status);
+      
+      if (!campaignsRes.ok || !servicesRes.ok) {
+        console.error("CampaignManager: Fetch failed", { 
+          campaignsStatus: campaignsRes.status, 
+          servicesStatus: servicesRes.status 
+        });
+        throw new Error();
+      }
 
       const campaignsData = await campaignsRes.json();
       const servicesData = await servicesRes.json();
+      
+      console.log("CampaignManager: Services Data Received:", servicesData);
       
       setCampaigns(campaignsData);
       setServices(servicesData);
@@ -306,15 +329,25 @@ export function CampaignManager({ tenantId }: { tenantId: string }) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Target Service</Label>
-                <Select value={formData.serviceId} onValueChange={(val) => setFormData(prev => ({ ...prev, serviceId: val as string }))}>
+                <Select 
+                  value={formData.serviceId || "all"} 
+                  onValueChange={(val) => {
+                    const newId = (val === "all" ? "" : val) as string;
+                    setFormData(prev => ({ ...prev, serviceId: newId }));
+                  }}
+                >
                   <SelectTrigger className="rounded-xl border-slate-200">
                     <SelectValue placeholder="All Services" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Services</SelectItem>
-                    {services.map(s => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                    ))}
+                    {services.length > 0 ? (
+                      services.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))
+                    ) : (
+                      <div className="py-2 px-8 text-xs text-slate-400">No services found</div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
