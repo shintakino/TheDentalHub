@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
-import { appointments, auditLogs } from "@/lib/db/schema";
+import { appointments, auditLogs, inventoryItems } from "@/lib/db/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { getTenantId } from "@/lib/db/tenant";
 import { DailySchedule } from "@/components/dashboard/DailySchedule";
 import { WaitlistManager } from "@/components/dashboard/WaitlistManager";
 import { LivePulse } from "@/components/dashboard/LivePulse";
-import { KPISnapshot, QuickActions, ActivityFeed, Activity, ActivityStatusPayload } from "@/components/dashboard/OverviewComponents";
+import { LowStockWidget, KPISnapshot, QuickActions, ActivityFeed, Activity, ActivityStatusPayload } from "@/components/dashboard/OverviewComponents";
 import { startOfDay, endOfDay } from "date-fns";
 import { getNetworkRecommendations } from "@/lib/analytics/optimization";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,6 +75,18 @@ export default async function DashboardPage({
   // Spec says: "Intelligence Alerts: 'System Recommendations' section on the Overview page"
   const recommendations = !branchId ? await getNetworkRecommendations(tenantId) : [];
 
+  // Fetch Low Stock Items
+  const inventoryData = await db.query.inventoryItems.findMany({
+    where: eq(inventoryItems.tenantId, tenantId),
+    with: {
+      stock: true
+    }
+  });
+
+  const lowStockItems = inventoryData.filter(item => {
+    return item.stock.some(s => Number(s.quantity) <= Number(s.lowStockThreshold));
+  });
+
   // Map to the format expected by DailySchedule component
   const formattedAppointments = dailyAppointments.map((app) => ({
     id: app.id,
@@ -142,6 +154,10 @@ export default async function DashboardPage({
 
       <QuickActions tenantSlug={tenantSlug} />
       
+      {!branchId && lowStockItems.length > 0 && (
+        <LowStockWidget items={lowStockItems} tenantSlug={tenantSlug} />
+      )}
+
       <div className="mb-12">
         <h2 className="text-xl font-bold mb-6 font-playfair text-obsidian flex items-center gap-2">
           <span className="flex h-3 w-3 rounded-full bg-green-500 animate-pulse" />

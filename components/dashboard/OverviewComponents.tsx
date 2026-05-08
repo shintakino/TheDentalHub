@@ -8,7 +8,10 @@ import {
   CheckCircle2,
   CalendarDays,
   XCircle,
-  Clock
+  Clock,
+  AlertTriangle,
+  ArrowRight,
+  Package
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -21,6 +24,52 @@ interface KPISnapshotProps {
     noShow: number;
     cancelled: number;
   };
+}
+
+export function LowStockWidget({ items, tenantSlug }: { items: any[], tenantSlug: string }) {
+  if (items.length === 0) return null;
+
+  return (
+    <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white rounded-2xl mb-8 border-l-4 border-l-amber-500">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-amber-600">
+            <AlertTriangle className="h-5 w-5" />
+            <CardTitle className="font-playfair text-lg">Inventory Alerts</CardTitle>
+          </div>
+          <Button variant="ghost" size="sm" asChild className="text-amber-600 hover:text-amber-700 hover:bg-amber-50">
+            <Link href={`/manage/${tenantSlug}/inventory`}>
+              Manage <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {items.slice(0, 3).map(item => (
+            <div key={item.id} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                  <Package className="h-4 w-4 text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">{item.name}</p>
+                  <p className="text-xs text-slate-500">{item.category}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-amber-600">Low Stock</p>
+                <p className="text-xs text-slate-500">{item.stock.reduce((acc: number, s: any) => acc + Number(s.quantity), 0)} {item.unit} left</p>
+              </div>
+            </div>
+          ))}
+          {items.length > 3 && (
+            <p className="text-xs text-center text-slate-400 pt-2">+{items.length - 3} more items low in stock</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function KPISnapshot({ stats }: KPISnapshotProps) {
