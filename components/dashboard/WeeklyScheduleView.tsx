@@ -1,30 +1,26 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { format, isSameDay } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Clock, Calendar, Info, MapPin, User, Check, X, Send } from "lucide-react";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetDescription, 
+  SheetHeader, 
+  SheetTitle 
+} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { AppointmentStateMachine } from "@/lib/appointments/state-machine";
+import { Button } from "@/components/ui/button";
 import { AppointmentStatus } from "@/lib/db/schema";
-import { AlertCircle, Send, MapPin, Calendar, Clock as ClockIcon, User, Info, Check, X } from "lucide-react";
-
+import { AppointmentStateMachine } from "@/lib/appointments/state-machine";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,20 +38,25 @@ interface Appointment {
   duration: number;
 }
 
-export function DailySchedule({ initialAppointments }: { initialAppointments: Appointment[] }) {
+interface WeeklyScheduleViewProps {
+  days: Date[];
+  initialAppointments: Appointment[];
+}
+
+export function WeeklyScheduleView({ days, initialAppointments }: WeeklyScheduleViewProps) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
 
   useEffect(() => {
     setAppointments(initialAppointments);
   }, [initialAppointments]);
 
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [noteContent, setNoteContent] = useState("");
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [activeApptId, setActiveApptId] = useState<string | null>(null);
   const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
   const [actualPrice, setActualPrice] = useState("");
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ id: string; status: AppointmentStatus; label: string } | null>(null);
 
   const handleStatusChange = async (id: string, newStatus: AppointmentStatus, price?: string) => {
@@ -134,121 +135,69 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
   };
 
   return (
-    <div className="space-y-6">
-      {appointments.length === 0 ? (
-        <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-alabaster">
-          <p className="text-slate-500 font-outfit text-lg">No appointments scheduled for today.</p>
-        </div>
-      ) : (
-        <div className="grid gap-6">
-          {appointments.map((app) => {
-            const validNextStates = AppointmentStateMachine.getValidNextStates(app.status);
-            const isHighRisk = parseFloat(app.riskScore) >= 3;
-            
-            return (
-              <Card 
-                key={app.id} 
-                className={`group p-8 border-none shadow-[0_4px_32px_rgba(0,0,0,0.06)] bg-white transition-all hover:shadow-[0_4px_48px_rgba(0,0,0,0.1)] cursor-pointer relative overflow-hidden ${isHighRisk ? 'ring-1 ring-rose-200' : ''}`}
-                onClick={() => setSelectedAppointment(app)}
-              >
-                {app.status === "pending_approval" && (
-                  <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
-                )}
-                
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="font-playfair text-2xl font-medium text-obsidian">{app.patientName}</h3>
-                      <div className="flex gap-2">
-                        <Badge className={`${getStatusColor(app.status)} font-outfit font-medium px-3 py-1 uppercase tracking-wider text-[10px] border`} variant="outline">
-                          {app.status.replace("_", " ")}
-                        </Badge>
-                        <Badge variant="outline" className="font-outfit font-medium text-slate-500 border-slate-200 bg-slate-50 flex items-center gap-1 uppercase tracking-wider text-[10px]">
-                          <MapPin className="h-3 w-3" />
-                          {app.branchName}
-                        </Badge>
-                        {isHighRisk && (
-                          <Badge className="bg-rose-500 text-white font-outfit font-medium border-none px-3 py-1 uppercase tracking-wider text-[10px] animate-pulse flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            High Risk
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-slate-500 font-outfit text-sm">
-                      <div className="flex items-center gap-1.5">
-                        <ClockIcon className="h-4 w-4" />
-                        <span className="tabular-nums font-medium text-slate-700">
-                          {new Date(app.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+        {days.map((day) => {
+          const dayAppointments = appointments.filter((app) => isSameDay(new Date(app.startTime), day));
+          const isToday = isSameDay(day, new Date());
+
+          return (
+            <div key={day.toString()} className="flex flex-col gap-4">
+              <div className={cn(
+                "flex flex-col items-center py-4 rounded-2xl transition-all",
+                isToday ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-white text-slate-400 border border-slate-100"
+              )}>
+                <span className="text-xs font-outfit uppercase tracking-wider font-bold mb-1">
+                  {format(day, "EEE")}
+                </span>
+                <span className="text-2xl font-serif font-bold">
+                  {format(day, "d")}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {dayAppointments.length === 0 ? (
+                  <div className="h-32 rounded-2xl border-2 border-dashed border-slate-100 flex items-center justify-center text-slate-300 text-xs font-outfit text-center p-4">
+                    No appointments
+                  </div>
+                ) : (
+                  dayAppointments.map((app) => (
+                    <div 
+                      key={app.id} 
+                      onClick={() => setSelectedAppointment(app)}
+                      className="bg-white p-4 rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:shadow-md transition-shadow group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-3 h-3 text-primary" />
+                        <span className="text-[11px] font-bold font-outfit text-primary uppercase">
+                          {format(new Date(app.startTime), "h:mm a")}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Info className="h-4 w-4" />
-                        <span>{app.serviceName} ({app.duration}m)</span>
+                      <div className="font-outfit font-semibold text-obsidian text-sm truncate group-hover:text-primary transition-colors">
+                        {app.patientName}
+                      </div>
+                      <div className="mt-2">
+                        <span className={cn(
+                          "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tight",
+                          app.status === 'confirmed' && "bg-emerald-50 text-emerald-600",
+                          app.status === 'checked_in' && "bg-blue-50 text-blue-600",
+                          app.status === 'in_progress' && "bg-purple-50 text-purple-600",
+                          app.status === 'completed' && "bg-slate-50 text-slate-600",
+                          app.status === 'cancelled' && "bg-red-50 text-red-600",
+                          app.status === 'no_show' && "bg-amber-50 text-amber-600",
+                          app.status === 'pending_approval' && "bg-indigo-50 text-indigo-600",
+                        )}>
+                          {app.status.replace("_", " ")}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-3 sm:justify-end" onClick={(e) => e.stopPropagation()}>
-                    {app.status === "pending_approval" ? (
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-outfit font-medium px-4"
-                          disabled={loadingId === app.id}
-                          onClick={() => setConfirmAction({ id: app.id, status: "confirmed", label: "Approve" })}
-                        >
-                          <Check className="h-4 w-4 mr-1.5" />
-                          Approve
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="text-rose-600 border-rose-200 hover:bg-rose-50 font-outfit font-medium px-4"
-                          disabled={loadingId === app.id}
-                          onClick={() => setConfirmAction({ id: app.id, status: "cancelled", label: "Reject" })}
-                        >
-                          <X className="h-4 w-4 mr-1.5" />
-                          Reject
-                        </Button>
-                      </div>
-                    ) : (
-                      <>
-                        {isHighRisk && app.status === "confirmed" && (
-                          <Button 
-                            size="sm" 
-                            variant="secondary"
-                            className="bg-amber-100 text-amber-700 hover:bg-amber-200 font-outfit font-medium px-4"
-                            onClick={() => toast.success("Extra reminder SMS sent")}
-                          >
-                            <Send className="h-4 w-4 mr-1.5" />
-                            Remind
-                          </Button>
-                        )}
-                        {validNextStates.includes("checked_in") && (
-                          <Button size="sm" className="bg-sapphire hover:bg-blue-700 text-white font-outfit font-medium px-6" disabled={loadingId === app.id} onClick={() => setConfirmAction({ id: app.id, status: "checked_in", label: "Check In" })}>
-                            Check In
-                          </Button>
-                        )}
-                        {validNextStates.includes("in_progress") && (
-                          <Button size="sm" className="bg-sapphire hover:bg-blue-700 text-white font-outfit font-medium px-6" disabled={loadingId === app.id} onClick={() => setConfirmAction({ id: app.id, status: "in_progress", label: "Start Service" })}>
-                            Start
-                          </Button>
-                        )}
-                        {validNextStates.includes("completed") && (
-                          <Button size="sm" variant="outline" className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 font-outfit font-medium px-6" disabled={loadingId === app.id} onClick={() => { setActiveApptId(app.id); setIsCompletionDialogOpen(true); }}>
-                            Complete
-                          </Button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* Appointment Detail Sheet */}
       <Sheet open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
@@ -283,10 +232,10 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
                     <div className="space-y-1">
                       <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest font-outfit">Date & Time</p>
                       <p className="text-lg text-slate-700 font-medium font-outfit">
-                        {new Date(selectedAppointment.startTime).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        {format(new Date(selectedAppointment.startTime), 'EEEE, MMMM d')}
                       </p>
                       <p className="text-slate-500 font-medium tabular-nums">
-                        {new Date(selectedAppointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(selectedAppointment.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {format(new Date(selectedAppointment.startTime), 'h:mm a')} - {format(new Date(selectedAppointment.endTime), 'h:mm a')}
                       </p>
                     </div>
                   </div>
@@ -495,6 +444,6 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
