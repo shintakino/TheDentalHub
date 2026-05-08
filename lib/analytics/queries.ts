@@ -133,6 +133,32 @@ export const getNetworkHeatmap = cache(async (tenantId: string) => {
   .orderBy(sql`to_char(start_time, 'YYYY-MM-DD"T"HH24:00:00"Z"')`);
 });
 
+export const getCampaignStats = cache(async (tenantId: string, campaignId: string) => {
+  const [stats] = await db
+    .select({
+      totalBookings: sql<number>`count(*)`.mapWith(Number),
+      totalRevenue: sql<number>`sum(COALESCE(actual_price, 0))`.mapWith(Number),
+      completedBookings: sql<number>`count(*) filter (where status = 'completed')`.mapWith(Number),
+    })
+    .from(appointments)
+    .where(
+      and(
+        eq(appointments.tenantId, tenantId),
+        eq(appointments.campaignId, campaignId)
+      )
+    );
+
+  // Conversion rate would ideally need clicks/views, but we can track conversion relative to total clinic bookings or similar if needed.
+  // For now, let's just return the linked stats.
+
+  return {
+    totalBookings: stats.totalBookings || 0,
+    totalRevenue: stats.totalRevenue || 0,
+    completedBookings: stats.completedBookings || 0,
+    conversionRate: stats.totalBookings > 0 ? (stats.completedBookings / stats.totalBookings) : 0
+  };
+});
+
 export const getAnalyticsOverview = cache(async (tenantId: string, startDate: string, endDate: string, branchId?: string) => {
   const start = new Date(startDate);
   const end = new Date(endDate);

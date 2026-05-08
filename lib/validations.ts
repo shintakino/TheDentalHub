@@ -179,3 +179,17 @@ export const inventoryStockSchema = z.object({
 export type InventoryItemPayload = z.infer<typeof inventoryItemSchema>;
 export type InventoryAdjustmentPayload = z.infer<typeof inventoryAdjustmentSchema>;
 export type InventoryStockPayload = z.infer<typeof inventoryStockSchema>;
+
+export const campaignSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional().nullable(),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  status: z.enum(["draft", "active", "completed", "cancelled"]).default("draft"),
+  discountType: z.enum(["percentage", "fixed_amount", "none"]).default("none"),
+  discountValue: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid value format").default("0.00"),
+  serviceId: z.string().uuid("Invalid service ID").optional().nullable(),
+  trackingCode: z.string().min(1, "Tracking code is required"),
+});
+
+export type CampaignPayload = z.infer<typeof campaignSchema>;
