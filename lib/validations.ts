@@ -154,3 +154,27 @@ export type BranchPayload = z.infer<typeof branchSchema>;
 export type ServicePayload = z.infer<typeof serviceSchema>;
 export type InviteStaffPayload = z.infer<typeof inviteStaffSchema>;
 export type StaffAssignmentPayload = z.infer<typeof staffAssignmentSchema>;
+
+export const inventoryItemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  category: z.string().min(1, "Category is required"),
+  unit: z.string().min(1, "Unit is required"),
+});
+
+export const inventoryAdjustmentSchema = z.object({
+  itemId: z.string().uuid("Invalid item ID"),
+  branchId: z.string().uuid("Invalid branch ID"),
+  amount: z.string().regex(/^-?\d+(\.\d{1,2})?$/, "Invalid amount format"),
+  reason: z.string().min(1, "Reason is required"),
+});
+
+export const inventoryStockSchema = z.object({
+  itemId: z.string().uuid("Invalid item ID"),
+  branchId: z.string().uuid("Invalid branch ID"),
+  quantity: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid quantity format"),
+  lowStockThreshold: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid threshold format"),
+});
+
+export type InventoryItemPayload = z.infer<typeof inventoryItemSchema>;
+export type InventoryAdjustmentPayload = z.infer<typeof inventoryAdjustmentSchema>;
+export type InventoryStockPayload = z.infer<typeof inventoryStockSchema>;
