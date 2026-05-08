@@ -188,7 +188,8 @@ export const branchOverrides = pgTable("branch_overrides", {
 
 export const patientProfiles = pgTable("patient_profiles", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userId: text("user_id").unique(), // Clerk user ID (null for manual/guest entries)
+  tenantId: text("tenant_id"), // Clinic ID (null for global users, set for manual/guest entries)
+  userId: text("user_id").unique(), // Clerk user ID (null for manual entries)
   name: text("name"),
   email: text("email"),
   phone: text("phone"),

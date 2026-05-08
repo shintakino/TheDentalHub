@@ -55,38 +55,50 @@ export async function getBranchOccupancy(tenantId: string) {
 }
 
 export async function getPatients(tenantId: string, search?: string, limit = 20, offset = 0) {
-  // Get all unique patient IDs from appointments for this tenant
-  const patientIdsFromApts = db
-    .select({ patientId: appointments.patientId })
+  // 1. Aggregate appointment data per patientId for this tenant
+  const aptStats = db
+    .select({
+      patientId: appointments.patientId,
+      apt_name: sql<string>`MAX(${appointments.patientName})`.as("apt_name"),
+      apt_email: sql<string>`MAX(${appointments.patientEmail})`.as("apt_email"),
+      apt_last_visit: sql<Date>`MAX(${appointments.startTime})`.as("apt_last_visit"),
+      apt_total_visits: count().as("apt_total_visits"),
+    })
     .from(appointments)
     .where(eq(appointments.tenantId, tenantId))
     .groupBy(appointments.patientId)
-    .as("apt_ids");
+    .as("apt_stats");
 
-  // Get patients who have a profile OR have appointments
+  // 2. Query patientProfiles and join with appointment stats
   const query = db
     .select({
-      id: sql<string>`COALESCE(${patientProfiles.userId}, ${patientProfiles.id}::text, ${patientIdsFromApts.patientId})`,
-      name: sql<string>`MAX(COALESCE(${patientProfiles.name}, (SELECT patient_name FROM ${appointments} WHERE patient_id = ${patientIdsFromApts.patientId} OR patient_id = ${patientProfiles.userId} LIMIT 1)))`,
-      email: sql<string>`MAX(COALESCE(${patientProfiles.email}, (SELECT patient_email FROM ${appointments} WHERE patient_id = ${patientIdsFromApts.patientId} OR patient_id = ${patientProfiles.userId} LIMIT 1)))`,
-      lastVisit: sql<Date>`(SELECT max(start_time) FROM ${appointments} WHERE patient_id = COALESCE(${patientProfiles.userId}, ${patientProfiles.id}::text, ${patientIdsFromApts.patientId}))`,
-      totalAppointments: sql<number>`(SELECT count(*) FROM ${appointments} WHERE patient_id = COALESCE(${patientProfiles.userId}, ${patientProfiles.id}::text, ${patientIdsFromApts.patientId}))`.mapWith(Number),
-      loyaltyPoints: sql<number>`MAX(${patientProfiles.loyaltyPoints})`.mapWith(Number),
+      id: sql<string>`COALESCE(${patientProfiles.userId}, ${patientProfiles.id}::text, ${aptStats.patientId})`,
+      name: sql<string>`COALESCE(${patientProfiles.name}, ${aptStats.apt_name})`,
+      email: sql<string>`COALESCE(${patientProfiles.email}, ${aptStats.apt_email})`,
+      lastVisit: aptStats.apt_last_visit,
+      totalAppointments: sql<number>`COALESCE(${aptStats.apt_total_visits}, 0)`.mapWith(Number),
+      loyaltyPoints: sql<number>`COALESCE(${patientProfiles.loyaltyPoints}, 0)`.mapWith(Number),
     })
-    .from(patientProfiles)
-    .fullJoin(patientIdsFromApts, or(
-      eq(patientProfiles.userId, patientIdsFromApts.patientId),
-      eq(sql`${patientProfiles.id}::text`, patientIdsFromApts.patientId)
+    .from(aptStats)
+    .fullJoin(patientProfiles, or(
+      eq(patientProfiles.userId, aptStats.patientId),
+      eq(sql`${patientProfiles.id}::text`, aptStats.patientId)
     ))
     .where(
-      search ? or(
-        ilike(patientProfiles.name, `%${search}%`),
-        ilike(patientProfiles.email, `%${search}%`),
-        ilike(sql`(SELECT patient_name FROM ${appointments} WHERE patient_id = COALESCE(${patientProfiles.userId}, ${patientProfiles.id}::text, ${patientIdsFromApts.patientId}) LIMIT 1)`, `%${search}%`)
-      ) : undefined
+      and(
+        // Only include patients relevant to this tenant
+        or(
+          eq(patientProfiles.tenantId, tenantId),
+          sql`${aptStats.patientId} IS NOT NULL`
+        ),
+        // Search filter
+        search ? or(
+          ilike(sql`COALESCE(${patientProfiles.name}, ${aptStats.apt_name})`, `%${search}%`),
+          ilike(sql`COALESCE(${patientProfiles.email}, ${aptStats.apt_email})`, `%${search}%`)
+        ) : undefined
+      )
     )
-    .groupBy(sql`COALESCE(${patientProfiles.userId}, ${patientProfiles.id}::text, ${patientIdsFromApts.patientId})`)
-    .orderBy(desc(sql`(SELECT max(start_time) FROM ${appointments} WHERE patient_id = COALESCE(${patientProfiles.userId}, ${patientProfiles.id}::text, ${patientIdsFromApts.patientId}))`))
+    .orderBy(desc(aptStats.apt_last_visit))
     .limit(limit)
     .offset(offset);
 
@@ -97,16 +109,16 @@ export async function getPatientDetails(tenantId: string, patientId: string) {
   // Get profile if it exists (by userId or internal UUID)
   const profile = await db.query.patientProfiles.findFirst({
     where: or(
-      eq(patientProfiles.userId, patientId),
-      eq(sql`${patientProfiles.id}::text`, patientId)
+      and(eq(patientProfiles.userId, patientId), or(eq(patientProfiles.tenantId, tenantId), sql`${patientProfiles.tenantId} IS NULL`)),
+      and(eq(sql`${patientProfiles.id}::text`, patientId), eq(patientProfiles.tenantId, tenantId))
     ),
   });
 
   // Get aggregated stats from appointments
   const stats = await db
     .select({
-      name: appointments.patientName,
-      email: appointments.patientEmail,
+      name: sql<string>`MAX(${appointments.patientName})`,
+      email: sql<string>`MAX(${appointments.patientEmail})`,
       totalVisits: count(),
       noShows: sql<number>`count(*) FILTER (WHERE ${appointments.status} = 'no_show')`.mapWith(Number),
       lifetimeValue: sql<number>`sum(${appointments.actualPrice})`.mapWith(Number),
@@ -119,7 +131,7 @@ export async function getPatientDetails(tenantId: string, patientId: string) {
         eq(appointments.patientId, patientId)
       )
     )
-    .groupBy(appointments.patientName, appointments.patientEmail);
+    .groupBy(appointments.patientId);
 
   // Get appointment history
   const history = await db

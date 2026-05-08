@@ -36,6 +36,7 @@ export async function POST(
       name,
       email: email || null,
       phone: phone || null,
+      tenantId,
       updatedAt: new Date(),
     }).returning();
 
