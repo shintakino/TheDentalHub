@@ -56,11 +56,15 @@ Update this file whenever the current phase, active feature, or implementation s
 
 - [x] Implemented Predictive Operations & AI Insights (29-predictive-operations-ai.md)
 
+- [x] Implemented Clinical Inventory & Supply Chain Management (30-inventory-management.md)
+- [x] Created Patient Management Module (Owner-Side) specification (32-patient-management-module.md)
+- [x] Created Analytics Marketing & Intelligence Module specification (33-analytics-marketing-module.md)
+
+- [x] Implemented Patient Management Module (Owner-Side) (32-patient-management-module.md)
+
 ## In Progress
 
 None.
-
-## Open Questions
 
 - Add unresolved product or implementation questions here.
 
