@@ -1,8 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { InventoryManager } from "@/components/dashboard/InventoryManager";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Navbar } from "@/components/layout/Navbar";
 
 export default async function InventoryPage({
   params,
@@ -17,14 +15,8 @@ export default async function InventoryPage({
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar tenantId={tenantSlug} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto p-6">
-          <InventoryManager tenantId={tenantSlug} />
-        </main>
-      </div>
+    <div className="max-w-7xl mx-auto py-12 px-8">
+      <InventoryManager tenantId={tenantSlug} />
     </div>
   );
 }
