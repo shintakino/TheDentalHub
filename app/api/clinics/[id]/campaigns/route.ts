@@ -13,8 +13,16 @@ export async function GET(
     const { id: tenantId } = await params;
     const { orgId } = await auth();
 
-    if (!orgId || orgId !== tenantId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    console.log(`API: Fetching campaigns for tenantId: ${tenantId}, user orgId: ${orgId}`);
+
+    if (!orgId) {
+      console.error("API: Unauthorized - No orgId in session");
+      return NextResponse.json({ error: "Unauthorized: No active organization" }, { status: 401 });
+    }
+
+    if (orgId !== tenantId) {
+      console.error(`API: Unauthorized - orgId mismatch. Session: ${orgId}, Path: ${tenantId}`);
+      return NextResponse.json({ error: "Unauthorized: Organization mismatch" }, { status: 401 });
     }
 
     const clinicCampaigns = await db.query.campaigns.findMany({
