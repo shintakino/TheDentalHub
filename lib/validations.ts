@@ -16,6 +16,7 @@ export const bookAppointmentSchema = z.object({
 export const updateBrandingSchema = z.object({
   primaryColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/).optional(),
   secondaryColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/).optional().nullable(),
+  bookingApprovalMode: z.enum(["manual", "auto"]).optional(),
   subdomain: z.string().min(3).max(32).regex(/^[a-z0-9-]+$/).optional().nullable(),
   seoTitle: z.string().max(60).optional().nullable(),
   seoDescription: z.string().max(160).optional().nullable(),

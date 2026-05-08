@@ -15,11 +15,17 @@ import {
   communicationsLog,
   waitlistEntries,
   branchOverrides,
-  staffAssignments
+  staffAssignments,
+  inventoryItems,
+  inventoryStock,
+  inventoryLogs,
+  patientProfiles,
+  loyaltyTransactions,
+  reviews,
+  notifications
 } from "./schema";
 import { eq } from "drizzle-orm";
 import { addDays, startOfDay, setHours, setMinutes, subDays, format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
 
 if (!process.env.CLERK_SECRET_KEY) {
   console.error("CLERK_SECRET_KEY is not set in .env.local");
@@ -57,8 +63,6 @@ async function teardown() {
   }
 
   // 2. Delete Clerk Organizations
-  // Note: We search for organizations that might have been created by our test owner
-  // or simply have the name "Test Clinic"
   console.log("Searching for existing test organizations...");
   const { data: orgs } = await clerkClient.organizations.getOrganizationList({
     query: "Test Clinic",
@@ -159,6 +163,13 @@ async function main() {
   console.log("--- Database Seeding Phase ---");
   
   console.log("Clearing database tables...");
+  await db.delete(notifications);
+  await db.delete(reviews);
+  await db.delete(loyaltyTransactions);
+  await db.delete(patientProfiles);
+  await db.delete(inventoryLogs);
+  await db.delete(inventoryStock);
+  await db.delete(inventoryItems);
   await db.delete(communicationsLog);
   await db.delete(clinicalNotes);
   await db.delete(auditLogs);
@@ -177,6 +188,7 @@ async function main() {
     name: "The Dental Hub Premium",
     subdomain: "test-clinic",
     primaryColor: "#0f172a",
+    bookingApprovalMode: "manual",
   });
 
   console.log("Inserting Branches...");
@@ -221,9 +233,9 @@ async function main() {
 
   console.log("Inserting Services...");
   const [consultation, cleaning, xray] = await db.insert(services).values([
-    { tenantId, name: "General Consultation", duration: 30 },
-    { tenantId, name: "Professional Cleaning", duration: 45 },
-    { tenantId, name: "Dental X-Ray", duration: 15 },
+    { tenantId, name: "General Consultation", duration: 30, price: "50.00" },
+    { tenantId, name: "Professional Cleaning", duration: 45, price: "120.00" },
+    { tenantId, name: "Dental X-Ray", duration: 15, price: "75.00" },
   ]).returning();
 
   console.log("Inserting Staff records...");
@@ -234,33 +246,40 @@ async function main() {
 
   console.log("Inserting Staff Assignments...");
   await db.insert(staffAssignments).values([
-    // Jane Staff at Downtown on Weekdays
     { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 1, startTime: "09:00", endTime: "17:00" },
     { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 2, startTime: "09:00", endTime: "17:00" },
     { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 3, startTime: "09:00", endTime: "17:00" },
     { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 4, startTime: "09:00", endTime: "17:00" },
     { tenantId, staffId: janeStaff.id, branchId: branch1.id, dayOfWeek: 5, startTime: "09:00", endTime: "17:00" },
-    // Dr Owner at Westside on Weekdays
     { tenantId, staffId: drOwner.id, branchId: branch2.id, dayOfWeek: 1, startTime: "08:00", endTime: "16:00" },
     { tenantId, staffId: drOwner.id, branchId: branch2.id, dayOfWeek: 2, startTime: "08:00", endTime: "16:00" },
   ]);
 
-  console.log("Inserting Branch Overrides...");
-  await db.insert(branchOverrides).values([
-    {
-      tenantId,
-      branchId: branch1.id,
-      startDate: setHours(addDays(startOfDay(new Date()), 7), 0),
-      endDate: setHours(addDays(startOfDay(new Date()), 7), 23),
-      reason: "Annual Maintenance",
-      isClosed: true,
-    }
+  console.log("Inserting Inventory Items...");
+  const [gloves, anesthetic, composite] = await db.insert(inventoryItems).values([
+    { tenantId, name: "Nitrile Gloves (Large)", category: "Consumables", unit: "Box" },
+    { tenantId, name: "Lidocaine Anesthetic", category: "Medication", unit: "Vial" },
+    { tenantId, name: "Hybrid Composite Resin", category: "Consumables", unit: "Syringe" },
+  ]).returning();
+
+  console.log("Inserting Inventory Stock...");
+  await db.insert(inventoryStock).values([
+    { itemId: gloves.id, branchId: branch1.id, quantity: "5.00", lowStockThreshold: "10.00" }, // Low stock
+    { itemId: gloves.id, branchId: branch2.id, quantity: "20.00", lowStockThreshold: "10.00" },
+    { itemId: anesthetic.id, branchId: branch1.id, quantity: "50.00", lowStockThreshold: "20.00" },
+    { itemId: composite.id, branchId: branch1.id, quantity: "15.00", lowStockThreshold: "5.00" },
   ]);
+
+  console.log("Inserting Patient Profiles...");
+  const [patientProfile] = await db.insert(patientProfiles).values({
+    userId: patientUser.id,
+    loyaltyPoints: 150,
+    preferences: { email_marketing: true, sms_reminders: true },
+  }).returning();
 
   console.log("Inserting Mock Appointments...");
   const today = startOfDay(new Date());
 
-  // Past appointments (completed)
   const [pastAppt] = await db.insert(appointments).values([
     {
       tenantId,
@@ -272,8 +291,17 @@ async function main() {
       startTime: setMinutes(setHours(subDays(today, 1), 10), 0),
       endTime: setMinutes(setHours(subDays(today, 1), 10), 30),
       status: "completed",
+      actualPrice: "50.00",
     },
   ]).returning();
+
+  console.log("Inserting Loyalty Transactions...");
+  await db.insert(loyaltyTransactions).values({
+    patientId: patientProfile.id,
+    appointmentId: pastAppt.id,
+    amount: 50,
+    reason: "Completed Consultation",
+  });
 
   console.log("Inserting Clinical Notes...");
   await db.insert(clinicalNotes).values({
@@ -283,8 +311,36 @@ async function main() {
     content: "Patient has good oral hygiene. Recommended regular cleaning every 6 months.",
   });
 
-  // Future appointments (upcoming)
+  console.log("Inserting Reviews...");
+  await db.insert(reviews).values({
+    tenantId,
+    appointmentId: pastAppt.id,
+    rating: 5,
+    comment: "Excellent service! Very professional and pain-free.",
+  });
+
   const futureAppts = await db.insert(appointments).values([
+    // --- BRANCH 1 (DOWNTOWN) ---
+    {
+      tenantId,
+      branchId: branch1.id,
+      serviceId: consultation.id,
+      patientName: "Alice Smith",
+      patientEmail: "alice@example.com",
+      startTime: setMinutes(setHours(today, 9), 0),
+      endTime: setMinutes(setHours(today, 9), 30),
+      status: "confirmed",
+    },
+    {
+      tenantId,
+      branchId: branch1.id,
+      serviceId: cleaning.id,
+      patientName: "Bob Johnson",
+      patientEmail: "bob@example.com",
+      startTime: setMinutes(setHours(today, 13), 0),
+      endTime: setMinutes(setHours(today, 13), 45),
+      status: "checked_in",
+    },
     {
       tenantId,
       branchId: branch1.id,
@@ -295,6 +351,49 @@ async function main() {
       startTime: setMinutes(setHours(addDays(today, 1), 11), 0),
       endTime: setMinutes(setHours(addDays(today, 1), 11), 45),
       status: "confirmed",
+    },
+    {
+      tenantId,
+      branchId: branch1.id,
+      serviceId: consultation.id,
+      patientName: "Charlie Brown",
+      patientEmail: "charlie@example.com",
+      startTime: setMinutes(setHours(addDays(today, 1), 15), 0),
+      endTime: setMinutes(setHours(addDays(today, 1), 15), 30),
+      status: "pending_approval",
+    },
+    {
+      tenantId,
+      branchId: branch1.id,
+      serviceId: xray.id,
+      patientName: "Grace Hopper",
+      patientEmail: "grace@example.com",
+      startTime: setMinutes(setHours(addDays(today, 4), 10), 0),
+      endTime: setMinutes(setHours(addDays(today, 4), 10), 15),
+      status: "confirmed",
+    },
+
+    // --- BRANCH 2 (WESTSIDE) ---
+    {
+      tenantId,
+      branchId: branch2.id,
+      serviceId: xray.id,
+      patientName: "David Miller",
+      patientEmail: "david@example.com",
+      startTime: setMinutes(setHours(today, 10), 30),
+      endTime: setMinutes(setHours(today, 10), 45),
+      status: "in_progress",
+      riskScore: "3.5",
+    },
+    {
+      tenantId,
+      branchId: branch2.id,
+      serviceId: consultation.id,
+      patientName: "Eve Adams",
+      patientEmail: "eve@example.com",
+      startTime: setMinutes(setHours(today, 14), 30),
+      endTime: setMinutes(setHours(today, 14), 45),
+      status: "pending_approval",
     },
     {
       tenantId,
@@ -309,22 +408,22 @@ async function main() {
     },
     {
       tenantId,
-      branchId: branch1.id,
-      serviceId: consultation.id,
-      patientName: "Random Patient 1",
-      patientEmail: "random1@example.com",
-      startTime: setMinutes(setHours(addDays(today, 1), 15), 0),
-      endTime: setMinutes(setHours(addDays(today, 1), 15), 30),
+      branchId: branch2.id,
+      serviceId: cleaning.id,
+      patientName: "Frank Wright",
+      patientEmail: "frank@example.com",
+      startTime: setMinutes(setHours(addDays(today, 3), 9), 30),
+      endTime: setMinutes(setHours(addDays(today, 3), 10), 15),
       status: "confirmed",
     },
     {
       tenantId,
-      branchId: branch1.id,
-      serviceId: cleaning.id,
-      patientName: "Random Patient 2",
-      patientEmail: "random2@example.com",
-      startTime: setMinutes(setHours(addDays(today, 3), 9), 30),
-      endTime: setMinutes(setHours(addDays(today, 3), 10), 15),
+      branchId: branch2.id,
+      serviceId: consultation.id,
+      patientName: "Heidi Klum",
+      patientEmail: "heidi@example.com",
+      startTime: setMinutes(setHours(addDays(today, 5), 16), 0),
+      endTime: setMinutes(setHours(addDays(today, 5), 16), 30),
       status: "confirmed",
     }
   ]).returning();
@@ -339,6 +438,24 @@ async function main() {
       payload: { source: "seed_script" },
     }))
   );
+
+  console.log("Inserting Notifications...");
+  await db.insert(notifications).values([
+    {
+      userId: owner.id,
+      tenantId,
+      title: "New Booking Request",
+      message: "You have a new booking request for Downtown Branch.",
+      importance: "medium",
+    },
+    {
+      userId: owner.id,
+      tenantId,
+      title: "Low Stock Alert",
+      message: "Nitrile Gloves are low in stock at Downtown Branch.",
+      importance: "high",
+    }
+  ]);
 
   console.log("Inserting Waitlist Entries...");
   await db.insert(waitlistEntries).values([
@@ -361,7 +478,6 @@ async function main() {
       status: "notified",
     }
   ]);
-
 
   console.log("\nDatabase seeded successfully!");
   console.log("--------------------------------------------------");
