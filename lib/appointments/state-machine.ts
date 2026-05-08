@@ -3,6 +3,7 @@ import { AppointmentStatus } from "../db/schema";
 type Transitions = Record<AppointmentStatus, AppointmentStatus[]>;
 
 const validTransitions: Transitions = {
+  pending_approval: ["confirmed", "cancelled"],
   confirmed: ["checked_in", "cancelled", "no_show"],
   checked_in: ["in_progress", "cancelled"],
   in_progress: ["completed"],

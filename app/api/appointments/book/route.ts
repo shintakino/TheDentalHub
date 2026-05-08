@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { appointments, branches } from "@/lib/db/schema";
+import { appointments, branches, clinics } from "@/lib/db/schema";
 import { eq, and, or, lt, gt, lte, gte } from "drizzle-orm";
 import { z } from "zod";
 import { notificationTriggers } from "@/lib/notifications/triggers";
@@ -37,6 +37,15 @@ export async function POST(req: Request) {
   
   if (!branch) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
 
+  // Fetch clinic settings to check approval mode
+  const clinicData = await db.query.clinics.findFirst({
+    where: eq(clinics.tenantId, branch.tenantId),
+  });
+
+  if (!clinicData) return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
+
+  const initialStatus = clinicData.bookingApprovalMode === "auto" ? "confirmed" : "pending_approval";
+
   // Pre-calculate risk score
   const prediction = await Forecaster.predictNoShowRisk(userId, new Date(startTime));
 
@@ -46,7 +55,7 @@ export async function POST(req: Request) {
       const conflicting = await tx.query.appointments.findFirst({
         where: and(
           eq(appointments.branchId, branchId),
-          eq(appointments.status, "confirmed"),
+          or(eq(appointments.status, "confirmed"), eq(appointments.status, "pending_approval")),
           // Overlap condition: (start1 < end2) AND (end1 > start2)
           lt(appointments.startTime, new Date(endTime)),
           gt(appointments.endTime, new Date(startTime))
@@ -66,7 +75,7 @@ export async function POST(req: Request) {
         patientId: userId,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
-        status: "confirmed",
+        status: initialStatus,
         riskScore: prediction.riskScore,
       }).returning();
 
@@ -76,7 +85,14 @@ export async function POST(req: Request) {
     // Trigger notification asynchronously
     after(async () => {
       try {
-        await notificationTriggers.triggerBookingConfirmation(appointment.id);
+        if (initialStatus === "confirmed") {
+          await notificationTriggers.triggerBookingConfirmation(appointment.id);
+        } else {
+          // Trigger a "Booking Received / Pending" notification if implemented, 
+          // or just the generic one. For now, let's stick to the confirmation trigger 
+          // but maybe rename/refactor it later.
+          await notificationTriggers.triggerBookingConfirmation(appointment.id);
+        }
         
         // If high risk, trigger priority reminder immediately or schedule it
         if (prediction.isHighRisk) {

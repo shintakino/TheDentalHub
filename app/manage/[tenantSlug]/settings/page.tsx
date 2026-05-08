@@ -1,12 +1,22 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { db } from "@/lib/db";
+import { clinics } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { getTenantId } from "@/lib/db/tenant";
 import { BranchManager } from "@/components/dashboard/BranchManager";
 import { ServicesTab } from "@/components/dashboard/settings/ServicesTab";
 import { StaffTab } from "@/components/dashboard/settings/StaffTab";
 import { StaffRoster } from "@/components/dashboard/StaffRoster";
+import { GeneralSettingsTab } from "@/components/dashboard/settings/GeneralSettingsTab";
 
 export default async function SettingsPage() {
   const tenantId = await getTenantId();
+
+  const clinic = await db.query.clinics.findFirst({
+    where: eq(clinics.tenantId, tenantId),
+  });
+
+  if (!clinic) return null;
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
@@ -15,8 +25,14 @@ export default async function SettingsPage() {
         <p className="text-slate-500 font-outfit text-lg">Manage your branches, services, and staff</p>
       </div>
 
-      <Tabs defaultValue="branches" className="space-y-6">
+      <Tabs defaultValue="general" className="space-y-6">
         <TabsList className="bg-transparent border-b border-slate-200 w-full justify-start h-auto p-0 gap-8 rounded-none">
+          <TabsTrigger 
+            value="general" 
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
+          >
+            General
+          </TabsTrigger>
           <TabsTrigger 
             value="branches" 
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
@@ -43,6 +59,13 @@ export default async function SettingsPage() {
           </TabsTrigger>
         </TabsList>
         
+        <TabsContent value="general" className="mt-6 border-none p-0 outline-none">
+          <GeneralSettingsTab 
+            tenantId={tenantId} 
+            clinicId={clinic.id}
+            initialMode={clinic.bookingApprovalMode} 
+          />
+        </TabsContent>
         <TabsContent value="branches" className="mt-6 border-none p-0 outline-none">
           <BranchManager tenantId={tenantId} />
         </TabsContent>
