@@ -18,10 +18,11 @@ export default async function BookingPage({
     branchId?: string; 
     date?: string; 
     time?: string;
+    c?: string;
   }>;
 }) {
   const { tenantSlug } = await params;
-  const { step = "service", serviceId, branchId, date, time } = await searchParams;
+  const { step = "service", serviceId, branchId, date, time, c } = await searchParams;
 
   const clinic = await db.query.clinics.findFirst({
     where: eq(clinics.subdomain, tenantSlug),
@@ -90,10 +91,10 @@ export default async function BookingPage({
       {/* Step Content */}
       <div className="bg-white rounded-3xl p-8 md:p-12 shadow-2xl shadow-slate-200/50 min-h-[500px] flex flex-col">
         {step === "service" && (
-          <ServiceStep tenantSlug={tenantSlug} services={allServices} skipBranch={hasSingleBranch} />
+          <ServiceStep tenantSlug={tenantSlug} services={allServices} skipBranch={hasSingleBranch} campaignCode={c} />
         )}
         {step === "branch" && !hasSingleBranch && (
-          <BranchStep tenantSlug={tenantSlug} branches={allBranches} serviceId={serviceId!} />
+          <BranchStep tenantSlug={tenantSlug} branches={allBranches} serviceId={serviceId!} campaignCode={c} />
         )}
         {step === "time" && effectiveBranchId && serviceId && (
           <SchedulingStep 
@@ -113,6 +114,7 @@ export default async function BookingPage({
             serviceDuration={selectedService.duration}
             date={date}
             time={time}
+            campaignCode={c}
           />
         )}
       </div>

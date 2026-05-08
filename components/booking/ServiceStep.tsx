@@ -7,11 +7,13 @@ import { Badge } from "@/components/ui/badge";
 export function ServiceStep({ 
   tenantSlug, 
   services, 
-  skipBranch 
+  skipBranch,
+  campaignCode
 }: { 
   tenantSlug: string; 
-  services: ServiceConfig[]; 
+  services: any[]; 
   skipBranch: boolean;
+  campaignCode?: string;
 }) {
   const nextStep = skipBranch ? "time" : "branch";
 
@@ -25,7 +27,7 @@ export function ServiceStep({
         {services.map((service) => (
           <Link
             key={service.id}
-            href={`/${tenantSlug}/book?step=${nextStep}&serviceId=${service.id}`}
+            href={`/${tenantSlug}/book?step=${nextStep}&serviceId=${service.id}${campaignCode ? `&c=${campaignCode}` : ""}`}
             className="group p-6 rounded-2xl border bg-card hover:border-primary hover:shadow-lg transition-all flex items-center justify-between gap-4"
           >
             <div className="space-y-1">

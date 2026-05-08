@@ -6,11 +6,13 @@ import Link from "next/link";
 export function BranchStep({ 
   tenantSlug, 
   branches, 
-  serviceId 
+  serviceId,
+  campaignCode
 }: { 
   tenantSlug: string; 
-  branches: BranchConfig[]; 
+  branches: any[]; 
   serviceId: string;
+  campaignCode?: string;
 }) {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -22,7 +24,7 @@ export function BranchStep({
         {branches.map((branch) => (
           <Link
             key={branch.id}
-            href={`/${tenantSlug}/book?step=time&serviceId=${serviceId}&branchId=${branch.id}`}
+            href={`/${tenantSlug}/book?step=time&serviceId=${serviceId}&branchId=${branch.id}${campaignCode ? `&c=${campaignCode}` : ""}`}
             className="group p-6 rounded-2xl border bg-card hover:border-primary hover:shadow-lg transition-all flex items-center justify-between gap-4"
           >
             <div className="space-y-1">
@@ -32,7 +34,7 @@ export function BranchStep({
           </Link>
         ))}
       </div>
-      <Link href={`/${tenantSlug}/book?step=service`} className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest gap-2">
+      <Link href={`/${tenantSlug}/book?step=service${campaignCode ? `&c=${campaignCode}` : ""}`} className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest gap-2">
         ← Back to services
       </Link>
     </div>

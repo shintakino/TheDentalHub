@@ -30,6 +30,7 @@ interface FinancialOverviewProps {
       totalRevenue: number;
       projectedIncome: number;
       avgRevenuePerAppointment: number;
+      campaignRevenue?: number;
     };
     serviceProfitability: {
       name: string;
@@ -61,11 +62,11 @@ export function FinancialOverview({ data }: FinancialOverviewProps) {
       isPositive: true
     },
     {
-      title: "Projected Income",
-      value: currencyFormatter.format(data.summary.projectedIncome),
-      icon: Activity,
-      description: "Booked & in-progress",
-      trend: "+5.2%",
+      title: "Revenue from Campaigns",
+      value: currencyFormatter.format(data.summary.campaignRevenue || 0),
+      icon: TrendingUp,
+      description: "Marketing attributed",
+      trend: "+18.2%",
       isPositive: true
     },
     {

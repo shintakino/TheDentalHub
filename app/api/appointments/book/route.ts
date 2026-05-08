@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { appointments, branches, clinics } from "@/lib/db/schema";
+import { appointments, branches, clinics, campaigns } from "@/lib/db/schema";
 import { eq, and, or, lt, gt, lte, gte } from "drizzle-orm";
 import { z } from "zod";
 import { notificationTriggers } from "@/lib/notifications/triggers";
@@ -15,6 +15,7 @@ const bookingSchema = z.object({
   endTime: z.string().datetime(),
   patientName: z.string(),
   patientEmail: z.string().email(),
+  campaignCode: z.string().optional().nullable(),
 });
 
 export async function POST(req: Request) {
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid payload", details: validated.error }, { status: 400 });
   }
 
-  const { serviceId, branchId, startTime, endTime, patientName, patientEmail } = validated.data;
+  const { serviceId, branchId, startTime, endTime, patientName, patientEmail, campaignCode } = validated.data;
 
   // Fetch branch to get tenantId
   const branch = await db.query.branches.findFirst({
@@ -36,6 +37,20 @@ export async function POST(req: Request) {
   });
   
   if (!branch) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+
+  // Resolve campaign if tracking code provided
+  let campaignId = null;
+  if (campaignCode) {
+    const campaign = await db.query.campaigns.findFirst({
+      where: and(
+        eq(campaigns.tenantId, branch.tenantId),
+        eq(campaigns.trackingCode, campaignCode)
+      ),
+    });
+    if (campaign) {
+      campaignId = campaign.id;
+    }
+  }
 
   // Fetch clinic settings to check approval mode
   const clinicData = await db.query.clinics.findFirst({
@@ -77,6 +92,7 @@ export async function POST(req: Request) {
         endTime: new Date(endTime),
         status: initialStatus,
         riskScore: prediction.riskScore,
+        campaignId,
       }).returning();
 
       return newAppointment;

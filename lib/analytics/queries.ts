@@ -83,6 +83,20 @@ export const getRevenueAnalytics = cache(async (tenantId: string, startDate: str
     )
     .groupBy(branches.name);
 
+  // 4b. Revenue from Campaigns
+  const [campaignRevenue] = await db
+    .select({
+      total: sql<number>`sum(COALESCE(actual_price, 0))`.mapWith(Number)
+    })
+    .from(appointments)
+    .where(
+      and(
+        ...baseConditions,
+        eq(appointments.status, "completed"),
+        sql`campaign_id IS NOT NULL`
+      )
+    );
+
   // 5. Avg. Revenue Per Appointment
   const avgRevenue = realizedStats.count > 0 ? realizedStats.total / Number(realizedStats.count) : 0;
 
@@ -91,6 +105,7 @@ export const getRevenueAnalytics = cache(async (tenantId: string, startDate: str
       totalRevenue: realizedStats.total || 0,
       projectedIncome: projectedStats.total || 0,
       avgRevenuePerAppointment: avgRevenue,
+      campaignRevenue: campaignRevenue.total || 0,
     },
     serviceProfitability: serviceProfitability.map(s => ({
       name: s.serviceName,
