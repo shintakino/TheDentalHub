@@ -51,8 +51,8 @@ export function CampaignManager({ tenantId }: { tenantId: string }) {
     description: "",
     startDate: "",
     endDate: "",
-    status: "draft" as const,
-    discountType: "none" as const,
+    status: "draft" as string,
+    discountType: "none" as string,
     discountValue: "0.00",
     serviceId: "",
     trackingCode: ""
@@ -306,7 +306,7 @@ export function CampaignManager({ tenantId }: { tenantId: string }) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Target Service</Label>
-                <Select value={formData.serviceId} onValueChange={(val) => setFormData(prev => ({ ...prev, serviceId: val }))}>
+                <Select value={formData.serviceId} onValueChange={(val) => setFormData(prev => ({ ...prev, serviceId: val as string }))}>
                   <SelectTrigger className="rounded-xl border-slate-200">
                     <SelectValue placeholder="All Services" />
                   </SelectTrigger>
@@ -321,7 +321,7 @@ export function CampaignManager({ tenantId }: { tenantId: string }) {
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-2">
                   <Label>Discount</Label>
-                  <Select value={formData.discountType} onValueChange={(val: any) => setFormData(prev => ({ ...prev, discountType: val }))}>
+                  <Select value={formData.discountType} onValueChange={(val) => setFormData(prev => ({ ...prev, discountType: val as string }))}>
                     <SelectTrigger className="rounded-xl border-slate-200">
                       <SelectValue placeholder="None" />
                     </SelectTrigger>

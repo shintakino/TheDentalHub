@@ -61,10 +61,9 @@ Update this file whenever the current phase, active feature, or implementation s
 - [x] Created Analytics Marketing & Intelligence Module specification (33-analytics-marketing-module.md)
 
 - [x] Implemented Patient Management Module (Owner-Side) (32-patient-management-module.md)
+- [x] Implemented Analytics Marketing & Intelligence Module (33-analytics-marketing-module.md)
 
 ## In Progress
-
-- [ ] Analytics Marketing & Intelligence Module (33-analytics-marketing-module.md)
 
 - Add unresolved product or implementation questions here.
 
