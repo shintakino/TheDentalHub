@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, jsonb, integer, decimal, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, jsonb, integer, decimal, boolean, unique } from "drizzle-orm/pg-core";
 import { relations, InferSelectModel } from "drizzle-orm";
 
 export type Clinic = InferSelectModel<typeof clinics>;
@@ -239,7 +239,9 @@ export const inventoryStock = pgTable("inventory_stock", {
   quantity: decimal("quantity", { precision: 10, scale: 2 }).default("0.00").notNull(),
   lowStockThreshold: decimal("low_stock_threshold", { precision: 10, scale: 2 }).default("0.00").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  unq: unique().on(t.itemId, t.branchId),
+}));
 
 export const inventoryLogs = pgTable("inventory_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
