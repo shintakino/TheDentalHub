@@ -15,7 +15,8 @@ import {
   Bell,
   Palette,
   CreditCard,
-  Package
+  Package,
+  Megaphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ const navigation: NavItem[] = [
   { name: "Schedule", href: "/schedule", icon: CalendarDays },
   { name: "Patients", href: "/patients", icon: Users },
   { name: "Inventory", href: "/inventory", icon: Package },
+  { name: "Marketing", href: "/marketing", icon: Megaphone },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Branding", href: "/branding", icon: Palette },
   { name: "Settings", href: "/settings", icon: Settings },
