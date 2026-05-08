@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { appointments, auditLogs, inventoryItems } from "@/lib/db/schema";
+import { appointments, auditLogs, inventoryItems, branches, services } from "@/lib/db/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { getTenantId } from "@/lib/db/tenant";
 import { DailySchedule } from "@/components/dashboard/DailySchedule";
@@ -39,14 +39,28 @@ export default async function DashboardPage({
     baseConditions.push(eq(appointments.branchId, branchId));
   }
 
-  const dailyAppointments = await db.query.appointments.findMany({
-    where: and(...baseConditions),
-    orderBy: [appointments.startTime],
-    with: {
-      branch: true,
-      service: true,
-    }
-  });
+  const dailyAppointments = await db
+    .select({
+      id: appointments.id,
+      patientName: appointments.patientName,
+      patientEmail: appointments.patientEmail,
+      startTime: appointments.startTime,
+      endTime: appointments.endTime,
+      status: appointments.status,
+      riskScore: appointments.riskScore,
+      branch: {
+        name: branches.name,
+      },
+      service: {
+        name: services.name,
+        duration: services.duration,
+      },
+    })
+    .from(appointments)
+    .innerJoin(branches, eq(branches.id, appointments.branchId))
+    .innerJoin(services, eq(services.id, appointments.serviceId))
+    .where(and(...baseConditions))
+    .orderBy(appointments.startTime);
 
   // Calculate KPIs
   const stats = {
