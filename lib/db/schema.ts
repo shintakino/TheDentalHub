@@ -11,6 +11,9 @@ export type BranchOverride = InferSelectModel<typeof branchOverrides>;
 export type StaffAssignment = InferSelectModel<typeof staffAssignments>;
 export type PatientProfile = InferSelectModel<typeof patientProfiles>;
 export type LoyaltyTransaction = InferSelectModel<typeof loyaltyTransactions>;
+export type InventoryItem = InferSelectModel<typeof inventoryItems>;
+export type InventoryStock = InferSelectModel<typeof inventoryStock>;
+export type InventoryLog = InferSelectModel<typeof inventoryLogs>;
 
 export const clinics = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -219,6 +222,35 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const inventoryItems = pgTable("inventory_items", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // 'Consumables', 'Equipment', 'Medication', etc.
+  unit: text("unit").notNull(), // 'Box', 'Vial', 'Unit', etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const inventoryStock = pgTable("inventory_stock", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  itemId: uuid("item_id").notNull().references(() => inventoryItems.id, { onDelete: 'cascade' }),
+  branchId: uuid("branch_id").notNull().references(() => branches.id, { onDelete: 'cascade' }),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  lowStockThreshold: decimal("low_stock_threshold", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const inventoryLogs = pgTable("inventory_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  itemId: uuid("item_id").notNull().references(() => inventoryItems.id, { onDelete: 'cascade' }),
+  branchId: uuid("branch_id").notNull().references(() => branches.id, { onDelete: 'cascade' }),
+  changeAmount: decimal("change_amount", { precision: 10, scale: 2 }).notNull(),
+  reason: text("reason").notNull(), // 'Usage', 'Restock', 'Waste', 'Correction', etc.
+  performedBy: text("performed_by").notNull(), // Clerk User ID
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const clinicsRelations = relations(clinics, ({ many }) => ({
   branches: many(branches),
@@ -355,5 +387,32 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   clinic: one(clinics, {
     fields: [notifications.tenantId],
     references: [clinics.tenantId],
+  }),
+}));
+
+export const inventoryItemsRelations = relations(inventoryItems, ({ many }) => ({
+  stock: many(inventoryStock),
+  logs: many(inventoryLogs),
+}));
+
+export const inventoryStockRelations = relations(inventoryStock, ({ one }) => ({
+  item: one(inventoryItems, {
+    fields: [inventoryStock.itemId],
+    references: [inventoryItems.id],
+  }),
+  branch: one(branches, {
+    fields: [inventoryStock.branchId],
+    references: [branches.id],
+  }),
+}));
+
+export const inventoryLogsRelations = relations(inventoryLogs, ({ one }) => ({
+  item: one(inventoryItems, {
+    fields: [inventoryLogs.itemId],
+    references: [inventoryItems.id],
+  }),
+  branch: one(branches, {
+    fields: [inventoryLogs.branchId],
+    references: [branches.id],
   }),
 }));
