@@ -22,6 +22,7 @@ export const clinics = pgTable("clinics", {
   logoUrl: text("logo_url"),
   primaryColor: text("primary_color").default("#0047FF"),
   secondaryColor: text("secondary_color"),
+  bookingApprovalMode: text("booking_approval_mode", { enum: ["manual", "auto"] }).default("manual").notNull(),
   subdomain: text("subdomain").unique(),
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
@@ -82,6 +83,7 @@ export const staffAssignments = pgTable("staff_assignments", {
 
 // Define the valid statuses
 export const appointmentStatusEnum = [
+  "pending_approval",
   "confirmed",
   "checked_in",
   "in_progress",
@@ -186,7 +188,10 @@ export const branchOverrides = pgTable("branch_overrides", {
 
 export const patientProfiles = pgTable("patient_profiles", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userId: text("user_id").notNull().unique(), // Clerk user ID
+  userId: text("user_id").unique(), // Clerk user ID (null for manual/guest entries)
+  name: text("name"),
+  email: text("email"),
+  phone: text("phone"),
   loyaltyPoints: integer("loyalty_points").default(0).notNull(),
   preferences: jsonb("preferences").$type<{ email_marketing: boolean; sms_reminders: boolean }>().default({ email_marketing: true, sms_reminders: true }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
