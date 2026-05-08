@@ -317,7 +317,7 @@ export function StaffRoster({ tenantId }: { tenantId: string }) {
                                       <span className="font-semibold text-[10px] truncate">{branch?.name || "Unknown"}</span>
                                       <button 
                                         onClick={() => handleDeleteAssignment(as.id)}
-                                        className="opacity-0 group-hover:opacity-100 text-rose-500 hover:text-rose-700 transition-opacity"
+                                        className="text-rose-500 hover:text-rose-700 transition-opacity"
                                       >
                                         <Trash2 className="w-3 h-3" />
                                       </button>

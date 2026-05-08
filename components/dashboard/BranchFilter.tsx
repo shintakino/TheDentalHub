@@ -25,19 +25,19 @@ export function BranchFilter() {
 
   const currentBranchId = searchParams.get("branchId") || "all";
 
+  // Extract tenantSlug from pathname /manage/[tenantSlug]/...
+  const parts = pathname.split("/");
+  const manageIdx = parts.indexOf("manage");
+  const tenantSlug = manageIdx !== -1 ? parts[manageIdx + 1] : null;
+
   useEffect(() => {
     async function fetchBranches() {
+      if (!tenantSlug) return;
       try {
-        // Extract tenantSlug from pathname /manage/[tenantSlug]/...
-        const parts = pathname.split("/");
-        const manageIdx = parts.indexOf("manage");
-        if (manageIdx !== -1 && parts[manageIdx + 1]) {
-          const tenantSlug = parts[manageIdx + 1];
-          const response = await fetch(`/api/clinics/${tenantSlug}/branches`);
-          if (response.ok) {
-            const data = await response.json();
-            setBranches(data);
-          }
+        const response = await fetch(`/api/clinics/${tenantSlug}/branches`);
+        if (response.ok) {
+          const data = await response.json();
+          setBranches(data);
         }
       } catch (error) {
         console.error("Failed to fetch branches for filter:", error);
@@ -47,7 +47,7 @@ export function BranchFilter() {
     }
 
     fetchBranches();
-  }, [pathname]);
+  }, [tenantSlug]);
 
   const handleBranchChange = (value: string | null) => {
     if (!value) return;
@@ -60,6 +60,10 @@ export function BranchFilter() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
+  const selectedBranchName = currentBranchId === "all" 
+    ? "All Branches" 
+    : branches.find(b => b.id === currentBranchId)?.name || currentBranchId;
+
   if (loading || branches.length <= 1) return null;
 
   return (
@@ -67,7 +71,9 @@ export function BranchFilter() {
       <Building2 className="h-4 w-4 text-slate-400" />
       <Select value={currentBranchId} onValueChange={handleBranchChange}>
         <SelectTrigger className="w-[180px] h-9 text-xs font-outfit border-none shadow-none bg-slate-50 hover:bg-slate-100 transition-colors">
-          <SelectValue placeholder="All Branches" />
+          <SelectValue>
+            {selectedBranchName}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-xs">All Branches</SelectItem>
