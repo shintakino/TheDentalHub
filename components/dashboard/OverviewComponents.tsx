@@ -21,6 +21,7 @@ interface KPISnapshotProps {
   stats: {
     total: number;
     checkedIn: number;
+    pending: number;
     noShow: number;
     cancelled: number;
   };
@@ -82,6 +83,13 @@ export function KPISnapshot({ stats }: KPISnapshotProps) {
       bg: "bg-blue-50" 
     },
     { 
+      label: "Pending", 
+      value: stats.pending, 
+      icon: Clock, 
+      color: "text-indigo-600", 
+      bg: "bg-indigo-50" 
+    },
+    { 
       label: "Checked In", 
       value: stats.checkedIn, 
       icon: CheckCircle2, 
@@ -91,7 +99,7 @@ export function KPISnapshot({ stats }: KPISnapshotProps) {
     { 
       label: "No-Shows", 
       value: stats.noShow, 
-      icon: Clock, 
+      icon: AlertTriangle, 
       color: "text-amber-600", 
       bg: "bg-amber-50" 
     },
@@ -105,7 +113,7 @@ export function KPISnapshot({ stats }: KPISnapshotProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
       {kpis.map((kpi) => (
         <Card key={kpi.label} className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white rounded-2xl overflow-hidden">
           <CardContent className="p-6">

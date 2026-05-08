@@ -42,12 +42,17 @@ export default async function DashboardPage({
   const dailyAppointments = await db.query.appointments.findMany({
     where: and(...baseConditions),
     orderBy: [appointments.startTime],
+    with: {
+      branch: true,
+      service: true,
+    }
   });
 
   // Calculate KPIs
   const stats = {
     total: dailyAppointments.length,
     checkedIn: dailyAppointments.filter(a => a.status === 'checked_in' || a.status === 'in_progress' || a.status === 'completed').length,
+    pending: dailyAppointments.filter(a => a.status === 'pending_approval').length,
     noShow: dailyAppointments.filter(a => a.status === 'no_show').length,
     cancelled: dailyAppointments.filter(a => a.status === 'cancelled').length,
   };
@@ -91,9 +96,14 @@ export default async function DashboardPage({
   const formattedAppointments = dailyAppointments.map((app) => ({
     id: app.id,
     patientName: app.patientName,
+    patientEmail: app.patientEmail,
     startTime: app.startTime.toISOString(),
+    endTime: app.endTime.toISOString(),
     status: app.status,
     riskScore: app.riskScore,
+    branchName: app.branch.name,
+    serviceName: app.service.name,
+    duration: app.service.duration,
   }));
 
   const formattedActivities: Activity[] = filteredLogs.map(log => ({

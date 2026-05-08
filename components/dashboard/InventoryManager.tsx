@@ -190,7 +190,7 @@ export function InventoryManager({ tenantId }: { tenantId: string }) {
         </div>
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+          <Select value={selectedBranchId} onValueChange={(val) => val && setSelectedBranchId(val)}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="All Branches" />
             </SelectTrigger>
@@ -285,7 +285,7 @@ export function InventoryManager({ tenantId }: { tenantId: string }) {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="category">Category</Label>
-              <Select value={newItemCategory} onValueChange={setNewItemCategory}>
+              <Select value={newItemCategory} onValueChange={(val) => val && setNewItemCategory(val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -343,7 +343,7 @@ export function InventoryManager({ tenantId }: { tenantId: string }) {
               <Label>Branch</Label>
               <Select 
                 value={selectedBranchId === "all" ? (branches[0]?.id || "") : selectedBranchId} 
-                onValueChange={setSelectedBranchId}
+                onValueChange={(val) => val && setSelectedBranchId(val)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select branch" />
