@@ -72,20 +72,24 @@ export default async function DashboardPage({
   };
 
   // Fetch Recent Activity
-  const activityConditions = [eq(auditLogs.tenantId, tenantId)];
-  // Note: auditLogs doesn't have branchId directly, but we could filter by appointment.branchId if we join
-  // For now, let's keep activity feed global or filtered if we want to be strict.
-  
-  const recentLogs = await db.query.auditLogs.findMany({
-    where: and(...activityConditions),
-    limit: 5,
-    orderBy: [desc(auditLogs.createdAt)],
-    with: {
-      appointment: true
-    }
-  });
+  const recentLogs = await db
+    .select({
+      id: auditLogs.id,
+      action: auditLogs.action,
+      payload: auditLogs.payload,
+      createdAt: auditLogs.createdAt,
+      appointment: {
+        patientName: appointments.patientName,
+        branchId: appointments.branchId,
+      },
+    })
+    .from(auditLogs)
+    .leftJoin(appointments, eq(appointments.id, auditLogs.appointmentId))
+    .where(eq(auditLogs.tenantId, tenantId))
+    .limit(5)
+    .orderBy(desc(auditLogs.createdAt));
 
-  // Filter logs if branchId is provided (post-fetch since auditLogs doesn't have branchId)
+  // Filter logs if branchId is provided
   const filteredLogs = branchId 
     ? recentLogs.filter(log => log.appointment?.branchId === branchId)
     : recentLogs;
