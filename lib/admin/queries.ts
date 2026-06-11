@@ -10,7 +10,7 @@ import {
   communicationsLog,
   services
 } from "@/lib/db/schema";
-import { count, eq, sql, desc, and, or, ilike } from "drizzle-orm";
+import { count, eq, sql, desc, and, or, ilike, isNotNull, isNull } from "drizzle-orm";
 
 export async function getAllTenants() {
   return await db.select({
@@ -45,64 +45,144 @@ export async function getBranchOccupancy(tenantId: string) {
     maxCapacity: branches.maxCapacity,
     currentOccupancy: sql<number>`(
       SELECT count(*) 
-      FROM ${appointments} 
-      WHERE ${appointments.branchId} = ${branches.id} 
-      AND ${appointments.status} IN ('checked_in', 'in_progress')
+      FROM appointments 
+      WHERE appointments.branch_id = branches.id 
+      AND appointments.status IN ('checked_in', 'in_progress')
+    )`.mapWith(Number),
+    inChairCount: sql<number>`(
+      SELECT count(*) 
+      FROM appointments 
+      WHERE appointments.branch_id = branches.id 
+      AND appointments.status = 'in_progress'
+    )`.mapWith(Number),
+    waitingCount: sql<number>`(
+      SELECT count(*) 
+      FROM appointments 
+      WHERE appointments.branch_id = branches.id 
+      AND appointments.status = 'checked_in'
     )`.mapWith(Number),
   })
   .from(branches)
   .where(eq(branches.tenantId, tenantId));
 }
 
-export async function getPatients(tenantId: string, search?: string, limit = 20, offset = 0) {
-  // 1. Aggregate appointment data per patientId for this tenant
-  const aptStats = db
-    .select({
-      patientId: appointments.patientId,
-      apt_name: sql<string>`MAX(${appointments.patientName})`.as("apt_name"),
-      apt_email: sql<string>`MAX(${appointments.patientEmail})`.as("apt_email"),
-      apt_last_visit: sql<Date>`MAX(${appointments.startTime})`.as("apt_last_visit"),
-      apt_total_visits: count().as("apt_total_visits"),
-    })
-    .from(appointments)
-    .where(eq(appointments.tenantId, tenantId))
-    .groupBy(appointments.patientId)
-    .as("apt_stats");
-
-  // 2. Query patientProfiles and join with appointment stats
-  const query = db
-    .select({
-      id: sql<string>`COALESCE(${patientProfiles.userId}, ${patientProfiles.id}::text, ${aptStats.patientId})`,
-      name: sql<string>`COALESCE(${patientProfiles.name}, ${aptStats.apt_name})`,
-      email: sql<string>`COALESCE(${patientProfiles.email}, ${aptStats.apt_email})`,
-      lastVisit: aptStats.apt_last_visit,
-      totalAppointments: sql<number>`COALESCE(${aptStats.apt_total_visits}, 0)`.mapWith(Number),
-      loyaltyPoints: sql<number>`COALESCE(${patientProfiles.loyaltyPoints}, 0)`.mapWith(Number),
-    })
-    .from(aptStats)
-    .fullJoin(patientProfiles, or(
-      eq(patientProfiles.userId, aptStats.patientId),
-      eq(sql`${patientProfiles.id}::text`, aptStats.patientId)
-    ))
-    .where(
-      and(
-        // Only include patients relevant to this tenant
-        or(
-          eq(patientProfiles.tenantId, tenantId),
-          sql`${aptStats.patientId} IS NOT NULL`
-        ),
-        // Search filter
-        search ? or(
-          ilike(sql`COALESCE(${patientProfiles.name}, ${aptStats.apt_name})`, `%${search}%`),
-          ilike(sql`COALESCE(${patientProfiles.email}, ${aptStats.apt_email})`, `%${search}%`)
-        ) : undefined
-      )
+export async function getPatients(tenantId: string, search?: string, limit = 20, offset = 0, branchId?: string) {
+  // 1. Get registered profiles
+  const profiles = await db.select({
+    id: patientProfiles.id,
+    userId: patientProfiles.userId,
+    name: patientProfiles.name,
+    email: patientProfiles.email,
+    loyaltyPoints: patientProfiles.loyaltyPoints,
+  })
+  .from(patientProfiles)
+  .where(
+    and(
+      eq(patientProfiles.tenantId, tenantId),
+      search ? or(
+        ilike(patientProfiles.name, `%${search}%`),
+        ilike(patientProfiles.email, `%${search}%`)
+      ) : undefined
     )
-    .orderBy(desc(aptStats.apt_last_visit))
-    .limit(limit)
-    .offset(offset);
+  );
 
-  return await query;
+  // 2. Get appointment stats (for both registered and guest)
+  const aptStats = await db.select({
+    patientId: appointments.patientId,
+    patientName: appointments.patientName,
+    patientEmail: appointments.patientEmail,
+    lastVisit: sql<Date>`MAX(${appointments.startTime})`,
+    totalAppointments: count(),
+  })
+  .from(appointments)
+  .where(
+    and(
+      eq(appointments.tenantId, tenantId),
+      branchId ? eq(appointments.branchId, branchId) : undefined
+    )
+  )
+  .groupBy(appointments.patientId, appointments.patientName, appointments.patientEmail);
+
+  // 3. Merge results
+  const patientMap = new Map<string, any>();
+
+  const activePatientKeysInBranch = new Set<string>();
+  if (branchId) {
+    aptStats.forEach(stat => {
+      const key = stat.patientId || `${stat.patientName}-${stat.patientEmail || 'guest'}`;
+      activePatientKeysInBranch.add(key);
+    });
+  }
+
+  // Add profiles first
+  profiles.forEach(p => {
+    const key = p.userId || p.id;
+    if (branchId && !activePatientKeysInBranch.has(key)) {
+      return; // Skip profiles that have no appointments in this branch
+    }
+    patientMap.set(key, {
+      id: key,
+      name: p.name || "Unknown",
+      email: p.email,
+      loyaltyPoints: p.loyaltyPoints,
+      lastVisit: null,
+      totalAppointments: 0,
+    });
+  });
+
+  // Merge appointment stats
+  aptStats.forEach(stat => {
+    const key = stat.patientId || `${stat.patientName}-${stat.patientEmail || 'guest'}`;
+    
+    if (patientMap.has(key)) {
+      const existing = patientMap.get(key);
+      existing.lastVisit = stat.lastVisit;
+      existing.totalAppointments = Number(stat.totalAppointments);
+    } else if (!branchId) {
+      // Guest patient or profile not found
+      patientMap.set(key, {
+        id: key,
+        name: stat.patientName,
+        email: stat.patientEmail,
+        loyaltyPoints: 0,
+        lastVisit: stat.lastVisit,
+        totalAppointments: Number(stat.totalAppointments),
+      });
+    } else {
+      // If branchId is active, guest patients in this branch should be included
+      patientMap.set(key, {
+        id: key,
+        name: stat.patientName,
+        email: stat.patientEmail,
+        loyaltyPoints: 0,
+        lastVisit: stat.lastVisit,
+        totalAppointments: Number(stat.totalAppointments),
+      });
+    }
+  });
+
+  let allPatients = Array.from(patientMap.values());
+
+  // Apply search filter to guest patients too (profiles were already filtered)
+  if (search) {
+    const searchLower = search.toLowerCase();
+    allPatients = allPatients.filter(p => 
+      p.name.toLowerCase().includes(searchLower) || 
+      (p.email && p.email.toLowerCase().includes(searchLower))
+    );
+  }
+
+  // Sort by last visit descending
+  allPatients.sort((a, b) => {
+    if (!a.lastVisit) return 1;
+    if (!b.lastVisit) return -1;
+    return new Date(b.lastVisit).getTime() - new Date(a.lastVisit).getTime();
+  });
+
+  return {
+    patients: allPatients.slice(offset, offset + limit),
+    totalCount: allPatients.length
+  };
 }
 
 export async function getPatientDetails(tenantId: string, patientId: string) {
