@@ -78,7 +78,9 @@ export const branchSchema = z.object({
     active: z.boolean()
   })),
   maxCapacity: z.number().int().min(1, "Capacity must be at least 1"),
-  isActive: z.boolean()
+  isActive: z.boolean(),
+  latitude: z.string().optional().nullable(),
+  longitude: z.string().optional().nullable(),
 });
 
 export const staffAssignmentSchema = z.object({

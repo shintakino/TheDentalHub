@@ -4,6 +4,7 @@ import { clinics } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { updateBrandingSchema } from "@/lib/validations";
 import { auth } from "@clerk/nextjs/server";
+import { revalidateTag } from "next/cache";
 
 export async function PATCH(
   request: NextRequest, 
@@ -35,6 +36,16 @@ export async function PATCH(
         updatedAt: new Date() 
       })
       .where(eq(clinics.tenantId, id));
+
+    // Fetch the updated clinic record to get its subdomain for cache invalidation
+    const clinicRecord = await db.query.clinics.findFirst({
+      where: eq(clinics.tenantId, id)
+    });
+    
+    if (clinicRecord?.subdomain) {
+      revalidateTag(`clinic-subdomain-${clinicRecord.subdomain}`, "max");
+    }
+    revalidateTag(`clinic-tenant-${id}`, "max");
 
     return NextResponse.json({ success: true });
   } catch (error) {

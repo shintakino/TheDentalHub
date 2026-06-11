@@ -13,6 +13,7 @@ interface AppearanceTabProps {
     id: string;
     primaryColor: string;
     secondaryColor: string | null;
+    tenantId: string;
   };
 }
 
@@ -24,7 +25,7 @@ export function AppearanceTab({ clinic }: AppearanceTabProps) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/clinics/${clinic.id}/branding`, {
+      const response = await fetch(`/api/clinics/${clinic.tenantId}/branding`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

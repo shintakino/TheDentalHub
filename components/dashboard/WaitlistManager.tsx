@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Bell, CalendarCheck, X, UserPlus } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { 
   Dialog, 
   DialogContent, 
@@ -67,9 +67,13 @@ interface Branch {
   name: string;
 }
 
-export function WaitlistManager() {
+export function WaitlistManager({ branchId }: { branchId?: string }) {
   const params = useParams();
-  const tenantId = params.tenantSlug as string; // Usually the org ID in this project's API pattern
+  const searchParams = useSearchParams();
+  const tenantId = params.tenantSlug as string;
+  
+  const activeBranchId = branchId || searchParams.get("branchId") || "all";
+  
   const [entries, setEntries] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -88,15 +92,28 @@ export function WaitlistManager() {
     branchId: "",
   });
 
+  // Keep form branch selection synchronized with URL branch selection by default
+  useEffect(() => {
+    if (activeBranchId !== "all") {
+      setFormData(prev => ({ ...prev, branchId: activeBranchId }));
+    } else {
+      setFormData(prev => ({ ...prev, branchId: "" }));
+    }
+  }, [activeBranchId]);
+
   const [bookData, setBookData] = useState({
     date: new Date().toISOString().split('T')[0],
     startTime: "09:00",
   });
 
-  const fetchEntries = async () => {
+  const fetchEntries = async (selectedBranch: string = "all") => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/clinics/${tenantId}/waitlist`);
+      let url = `/api/clinics/${tenantId}/waitlist`;
+      if (selectedBranch !== "all") {
+        url += `?branchId=${selectedBranch}`;
+      }
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setEntries(data);
@@ -123,10 +140,10 @@ export function WaitlistManager() {
 
   useEffect(() => {
     if (tenantId) {
-      fetchEntries();
+      fetchEntries(activeBranchId);
       fetchMetadata();
     }
-  }, [tenantId]);
+  }, [tenantId, activeBranchId]);
 
   const handleAddEntry = async () => {
     try {
@@ -207,7 +224,7 @@ export function WaitlistManager() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "waiting": return <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none">Waiting</Badge>;
-      case "notified": return <Badge variant="secondary" className="bg-sapphire/10 text-sapphire border-none">Notified</Badge>;
+      case "notified": return <Badge variant="secondary" className="bg-primary/10 text-primary border-none">Notified</Badge>;
       case "booked": return <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-none">Booked</Badge>;
       case "cancelled": return <Badge variant="secondary" className="bg-rose-100 text-rose-600 border-none">Cancelled</Badge>;
       default: return <Badge variant="secondary">{status}</Badge>;
@@ -227,7 +244,7 @@ export function WaitlistManager() {
           <SheetHeader className="mb-6">
             <div className="flex justify-between items-center">
               <SheetTitle className="font-playfair text-3xl font-bold text-obsidian">Waitlist Management</SheetTitle>
-              <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-sapphire hover:bg-blue-700">
+              <Button size="sm" onClick={() => setIsAddOpen(true)} className="bg-primary hover:bg-primary/90">
                 <Plus className="w-4 h-4 mr-1" /> Add Patient
               </Button>
             </div>
@@ -272,7 +289,7 @@ export function WaitlistManager() {
                             <Button 
                               size="icon" 
                               variant="ghost" 
-                              className="w-8 h-8 text-sapphire hover:bg-sapphire/10"
+                              className="w-8 h-8 text-primary hover:bg-primary/10"
                               onClick={() => handleStatusChange(entry.id, "notified")}
                               title="Notify Patient"
                             >
@@ -330,7 +347,7 @@ export function WaitlistManager() {
                 placeholder="John Doe" 
                 value={formData.patientName}
                 onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
-                className="border-slate-200 focus:ring-sapphire"
+                className="border-slate-200 focus:ring-primary"
               />
             </div>
             <div className="grid gap-2">
@@ -340,7 +357,7 @@ export function WaitlistManager() {
                 placeholder="+1 234 567 890" 
                 value={formData.patientPhone}
                 onChange={(e) => setFormData({ ...formData, patientPhone: e.target.value })}
-                className="border-slate-200 focus:ring-sapphire"
+                className="border-slate-200 focus:ring-primary"
               />
             </div>
             <div className="grid gap-2">
@@ -351,7 +368,7 @@ export function WaitlistManager() {
                 placeholder="john@example.com" 
                 value={formData.patientEmail}
                 onChange={(e) => setFormData({ ...formData, patientEmail: e.target.value })}
-                className="border-slate-200 focus:ring-sapphire"
+                className="border-slate-200 focus:ring-primary"
               />
             </div>
             <div className="grid gap-2">
@@ -383,7 +400,7 @@ export function WaitlistManager() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-            <Button className="bg-sapphire hover:bg-blue-700" onClick={handleAddEntry}>Add to Queue</Button>
+            <Button className="bg-primary hover:bg-primary/90" onClick={handleAddEntry}>Add to Queue</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -403,7 +420,7 @@ export function WaitlistManager() {
                 type="date" 
                 value={bookData.date}
                 onChange={(e) => setBookData({ ...bookData, date: e.target.value })}
-                className="border-slate-200 focus:ring-sapphire"
+                className="border-slate-200 focus:ring-primary"
               />
             </div>
             <div className="grid gap-2">
@@ -413,7 +430,7 @@ export function WaitlistManager() {
                 type="time" 
                 value={bookData.startTime}
                 onChange={(e) => setBookData({ ...bookData, startTime: e.target.value })}
-                className="border-slate-200 focus:ring-sapphire"
+                className="border-slate-200 focus:ring-primary"
               />
             </div>
           </div>

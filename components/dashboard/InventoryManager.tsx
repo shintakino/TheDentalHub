@@ -33,12 +33,24 @@ import { toast } from "sonner";
 import { Plus, Search, Filter, History, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { InventoryItem, InventoryStock, Branch } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Pagination } from "@/components/ui/pagination";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 
 interface InventoryItemWithStock extends InventoryItem {
   stock: InventoryStock[];
 }
 
-export function InventoryManager({ tenantId }: { tenantId: string }) {
+export function InventoryManager({ tenantId, branchId }: { tenantId: string; branchId?: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const urlBranchId = branchId || searchParams.get("branchId") || "all";
+  const page = Number(searchParams.get("page")) || 1;
+  const pageSize = 10;
+
   const [items, setItems] = useState<InventoryItemWithStock[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
@@ -56,6 +68,31 @@ export function InventoryManager({ tenantId }: { tenantId: string }) {
   const [newItemName, setNewItemName] = useState("");
   const [newItemCategory, setNewItemCategory] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("");
+
+  // Sync internal state with URL branch selection
+  useEffect(() => {
+    setSelectedBranchId(urlBranchId);
+  }, [urlBranchId]);
+
+  const handleBranchChange = (value: string) => {
+    if (branchId) return; // Prevent change if locked by prop
+    setSelectedBranchId(value);
+    const newParams = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      newParams.delete("branchId");
+    } else {
+      newParams.set("branchId", value);
+    }
+    newParams.delete("page"); // Reset page on filter change
+    router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    const newParams = new URLSearchParams(searchParams.toString());
+    newParams.delete("page"); // Reset page on query change
+    router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -134,8 +171,8 @@ export function InventoryManager({ tenantId }: { tenantId: string }) {
       setAdjustmentAmount("");
       setAdjustmentReason("");
       fetchData();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "An unexpected error occurred");
     }
   };
 
@@ -166,6 +203,8 @@ export function InventoryManager({ tenantId }: { tenantId: string }) {
     item.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const paginatedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -185,62 +224,69 @@ export function InventoryManager({ tenantId }: { tenantId: string }) {
             placeholder="Search items or categories..." 
             className="pl-9"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={selectedBranchId} onValueChange={(val) => val && setSelectedBranchId(val)}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All Branches" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Branches</SelectItem>
-              {branches.map(branch => (
-                <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {!branchId && (
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={selectedBranchId} onValueChange={(val) => val && handleBranchChange(val)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="All Branches" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Branches</SelectItem>
+                {branches.map(branch => (
+                  <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">Item Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Stock Level</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right pr-6">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">Loading inventory...</TableCell>
+      {loading ? (
+        <TableSkeleton columnsCount={5} rowsCount={5} />
+      ) : filteredItems.length === 0 ? (
+        <EmptyState
+          icon={Search}
+          title="No inventory items found"
+          description={searchQuery ? "Try adjusting your search query or branch filter." : "Get started by adding your first clinical supply item."}
+          action={
+            !searchQuery && (
+              <Button onClick={() => setIsAddItemOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Add Item
+              </Button>
+            )
+          }
+        />
+      ) : (
+        <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-slate-50/50 border-b border-slate-100">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="pl-6">Item Name</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Stock Level</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right pr-6">Actions</TableHead>
                 </TableRow>
-              ) : filteredItems.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                    No items found. Add your first clinical supply.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredItems.map(item => {
+              </TableHeader>
+              <TableBody>
+                {paginatedItems.map(item => {
                   const status = getStatus(item);
                   return (
-                    <TableRow key={item.id}>
-                      <TableCell className="pl-6 font-medium">{item.name}</TableCell>
+                    <TableRow key={item.id} className="hover:bg-slate-50/50 border-slate-100 transition-colors">
+                      <TableCell className="pl-6 font-medium font-outfit text-slate-800">{item.name}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="font-normal">{item.category}</Badge>
+                        <Badge variant="outline" className="font-normal font-outfit">{item.category}</Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="font-outfit text-slate-700">
                         <span className="font-bold">{getStockForBranch(item, selectedBranchId)}</span> {item.unit}
                       </TableCell>
                       <TableCell>
-                        <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border", status.color)}>
+                        <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border font-outfit", status.color)}>
                           {status.label}
                         </span>
                       </TableCell>
@@ -248,6 +294,7 @@ export function InventoryManager({ tenantId }: { tenantId: string }) {
                         <Button 
                           variant="ghost" 
                           size="sm"
+                          className="font-outfit text-slate-500 hover:text-slate-900"
                           onClick={() => {
                             setSelectedItem(item);
                             setAdjustmentType("restock");
@@ -260,12 +307,17 @@ export function InventoryManager({ tenantId }: { tenantId: string }) {
                       </TableCell>
                     </TableRow>
                   );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                })}
+              </TableBody>
+            </Table>
+            <Pagination
+              totalCount={filteredItems.length}
+              pageSize={pageSize}
+              currentPage={page}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Dialog open={isAddItemOpen} onOpenChange={setIsAddItemOpen}>
         <DialogContent>

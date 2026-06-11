@@ -4,6 +4,7 @@ import { clinics } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { uploadClinicLogo } from "@/lib/storage/supabase";
 import { auth } from "@clerk/nextjs/server";
+import { revalidateTag } from "next/cache";
 
 export async function POST(
   request: NextRequest, 
@@ -49,6 +50,16 @@ export async function POST(
         updatedAt: new Date() 
       })
       .where(eq(clinics.tenantId, id));
+
+    // Fetch the clinic record to get subdomain for cache invalidation
+    const clinicRecord = await db.query.clinics.findFirst({
+      where: eq(clinics.tenantId, id)
+    });
+    
+    if (clinicRecord?.subdomain) {
+      revalidateTag(`clinic-subdomain-${clinicRecord.subdomain}`, "max");
+    }
+    revalidateTag(`clinic-tenant-${id}`, "max");
 
     return NextResponse.json({ logoUrl });
   } catch (error) {

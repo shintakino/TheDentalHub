@@ -61,16 +61,22 @@ export async function PATCH(
       return NextResponse.json({ error: validation.error.format() }, { status: 400 });
     }
 
-    const updateData: any = {
-      ...validation.data,
+    const { startDate, endDate, ...restData } = validation.data;
+
+    const updateData: Partial<Omit<typeof campaigns.$inferInsert, "startDate" | "endDate">> & {
+      startDate?: Date;
+      endDate?: Date;
+      updatedAt: Date;
+    } = {
+      ...restData,
       updatedAt: new Date(),
     };
 
-    if (validation.data.startDate) {
-      updateData.startDate = new Date(validation.data.startDate);
+    if (startDate) {
+      updateData.startDate = new Date(startDate);
     }
-    if (validation.data.endDate) {
-      updateData.endDate = new Date(validation.data.endDate);
+    if (endDate) {
+      updateData.endDate = new Date(endDate);
     }
 
     const [updatedCampaign] = await db

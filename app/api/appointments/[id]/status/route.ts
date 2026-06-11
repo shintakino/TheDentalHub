@@ -56,7 +56,11 @@ export async function PATCH(
 
     // 3. Execute Transaction
     await db.transaction(async (tx) => {
-      const updateData: any = { 
+      const updateData: {
+        status: AppointmentStatus;
+        updatedAt: Date;
+        actualPrice?: string;
+      } = { 
         status: newStatus, 
         updatedAt: new Date() 
       };

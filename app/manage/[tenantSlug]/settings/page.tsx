@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { clinics } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getTenantId } from "@/lib/db/tenant";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { BranchManager } from "@/components/dashboard/BranchManager";
 import { ServicesTab } from "@/components/dashboard/settings/ServicesTab";
 import { StaffTab } from "@/components/dashboard/settings/StaffTab";
@@ -16,6 +18,12 @@ export default async function SettingsPage() {
     where: eq(clinics.tenantId, tenantId),
   });
 
+  const { orgRole } = await auth();
+
+  if (orgRole !== "org:admin") {
+    redirect(`/manage/${tenantId}/overview`);
+  }
+
   if (!clinic) return null;
 
   return (
@@ -26,34 +34,34 @@ export default async function SettingsPage() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="bg-transparent border-b border-slate-200 w-full justify-start h-auto p-0 gap-8 rounded-none">
+        <TabsList className="bg-transparent border-b border-slate-200 w-full justify-start h-auto p-0 gap-8 rounded-none overflow-x-auto flex-nowrap scrollbar-none max-w-full pb-0.5">
           <TabsTrigger 
             value="general" 
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary shrink-0 rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
           >
             General
           </TabsTrigger>
           <TabsTrigger 
             value="branches" 
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary shrink-0 rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
           >
             Branches
           </TabsTrigger>
           <TabsTrigger 
             value="services" 
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary shrink-0 rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
           >
             Services
           </TabsTrigger>
           <TabsTrigger 
             value="staff" 
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary shrink-0 rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
           >
             Staff
           </TabsTrigger>
           <TabsTrigger 
             value="roster" 
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary shrink-0 rounded-none px-0 pb-4 pt-0 font-outfit text-base text-slate-500 data-[state=active]:text-obsidian transition-all"
           >
             Roster
           </TabsTrigger>

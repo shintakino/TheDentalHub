@@ -85,20 +85,20 @@ export function SchedulingStep({
                   <p className="text-sm text-muted-foreground">No available slots for this date.</p>
                   
                   {suggestions.length > 0 && (
-                    <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4 animate-in fade-in zoom-in duration-500">
-                      <p className="text-sm font-semibold text-blue-900 flex items-center gap-2">
+                    <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 space-y-4 animate-in fade-in zoom-in duration-500">
+                      <p className="text-sm font-semibold text-primary flex items-center gap-2">
                         <span className="text-lg">✨</span>
                         Alternative availability nearby
                       </p>
                       <div className="space-y-4">
                         {suggestions.map((s) => (
-                          <div key={s.branchId} className="space-y-2">
-                            <p className="text-xs text-blue-700 leading-relaxed">
+                           <div key={s.branchId} className="space-y-2">
+                            <p className="text-xs text-primary/80 leading-relaxed">
                               <b>{s.branchName}</b> ({s.distance} miles away) has a {format(new Date(s.nextSlot), "p")} available.
                             </p>
                             <button
                               onClick={() => switchToBranch(s.branchId)}
-                              className="w-full py-2.5 bg-white border border-blue-200 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                              className="w-full py-2.5 bg-white border border-primary/20 text-primary rounded-xl text-xs font-bold hover:bg-primary hover:text-white transition-all shadow-sm"
                             >
                               Switch to {s.branchName}
                             </button>

@@ -4,6 +4,8 @@ import { getTenantId } from "@/lib/db/tenant";
 import { AnalyticsOverview } from "@/components/dashboard/AnalyticsOverview";
 import { NetworkHeatmap } from "@/components/dashboard/NetworkHeatmap";
 import { format, subDays } from "date-fns";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 export default async function AnalyticsPage({
   searchParams,
@@ -11,6 +13,12 @@ export default async function AnalyticsPage({
   searchParams: Promise<{ startDate?: string; endDate?: string; branchId?: string }>;
 }) {
   const tenantId = await getTenantId();
+  const { orgRole } = await auth();
+
+  if (orgRole !== "org:admin") {
+    redirect(`/manage/${tenantId}/overview`);
+  }
+
   const resolvedParams = await searchParams;
   
   const endDate = resolvedParams.endDate || format(new Date(), "yyyy-MM-dd");

@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
+import { CommandPalette } from "@/components/layout/CommandPalette";
 
 export default function DashboardLayout({
   children,
@@ -17,6 +18,7 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+      <CommandPalette />
     </div>
   );
 }

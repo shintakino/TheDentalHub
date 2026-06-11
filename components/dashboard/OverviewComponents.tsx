@@ -16,6 +16,8 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { InventoryItem, InventoryStock } from "@/lib/db/schema";
+import { formatDistanceToNow } from "date-fns";
 
 interface KPISnapshotProps {
   stats: {
@@ -27,7 +29,11 @@ interface KPISnapshotProps {
   };
 }
 
-export function LowStockWidget({ items, tenantSlug }: { items: any[], tenantSlug: string }) {
+interface LowStockItem extends InventoryItem {
+  stock: InventoryStock[];
+}
+
+export function LowStockWidget({ items, tenantSlug }: { items: LowStockItem[], tenantSlug: string }) {
   if (items.length === 0) return null;
 
   return (
@@ -60,7 +66,7 @@ export function LowStockWidget({ items, tenantSlug }: { items: any[], tenantSlug
               </div>
               <div className="text-right">
                 <p className="font-bold text-amber-600">Low Stock</p>
-                <p className="text-xs text-slate-500">{item.stock.reduce((acc: number, s: any) => acc + Number(s.quantity), 0)} {item.unit} left</p>
+                <p className="text-xs text-slate-500">{item.stock.reduce((acc: number, s: InventoryStock) => acc + Number(s.quantity), 0)} {item.unit} left</p>
               </div>
             </div>
           ))}
@@ -79,15 +85,15 @@ export function KPISnapshot({ stats }: KPISnapshotProps) {
       label: "Total Bookings", 
       value: stats.total, 
       icon: CalendarDays, 
-      color: "text-blue-600", 
-      bg: "bg-blue-50" 
+      color: "text-primary", 
+      bg: "bg-primary/5" 
     },
     { 
       label: "Pending", 
       value: stats.pending, 
       icon: Clock, 
-      color: "text-indigo-600", 
-      bg: "bg-indigo-50" 
+      color: "text-slate-600", 
+      bg: "bg-slate-50" 
     },
     { 
       label: "Checked In", 
@@ -133,7 +139,9 @@ export function KPISnapshot({ stats }: KPISnapshotProps) {
   );
 }
 
-export function QuickActions({ tenantSlug }: { tenantSlug: string }) {
+export function QuickActions({ tenantSlug, isAdmin }: { tenantSlug: string; isAdmin: boolean }) {
+  if (!isAdmin) return null;
+
   const actions = [
     { label: "Manage Branches", href: `/manage/${tenantSlug}/settings?tab=branches`, icon: PlusSquare },
     { label: "Add Service", href: `/manage/${tenantSlug}/settings?tab=services`, icon: Plus },
@@ -204,10 +212,7 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
                     )}
                   </p>
                   <p className="text-xs font-outfit text-slate-400 uppercase tracking-tighter">
-                    {new Intl.RelativeTimeFormat('en', { style: 'short' }).format(
-                      Math.ceil((activity.timestamp.getTime() - Date.now()) / (1000 * 60)),
-                      'minute'
-                    )}
+                    {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
                   </p>
                 </div>
               </div>

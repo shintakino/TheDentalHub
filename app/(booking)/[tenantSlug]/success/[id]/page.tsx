@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
-import { clinics, appointments, branches, services } from "@/lib/db/schema";
+import { appointments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { getCachedClinicBySubdomain } from "@/lib/db/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -11,9 +12,7 @@ export default async function BookingSuccessPage({
   params: Promise<{ tenantSlug: string, id: string }>;
 }) {
   const { tenantSlug, id } = await params;
-  const clinic = await db.query.clinics.findFirst({
-    where: eq(clinics.subdomain, tenantSlug),
-  });
+  const clinic = await getCachedClinicBySubdomain(tenantSlug);
   if (!clinic) notFound();
 
   const appointment = await db.query.appointments.findFirst({

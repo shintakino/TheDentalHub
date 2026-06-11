@@ -8,10 +8,14 @@ export default async function InventoryPage({
   params: Promise<{ tenantSlug: string }>;
 }) {
   const { tenantSlug } = await params;
-  const { userId, orgId } = await auth();
+  const { userId, orgId, orgRole } = await auth();
 
   if (!userId || !orgId || orgId !== tenantSlug) {
     redirect("/sign-in");
+  }
+
+  if (orgRole !== "org:admin") {
+    redirect(`/manage/${tenantSlug}/overview`);
   }
 
   return (

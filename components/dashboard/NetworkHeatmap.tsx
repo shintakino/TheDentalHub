@@ -57,9 +57,9 @@ export function NetworkHeatmap() {
   };
 
   const getSurgicalSapphire = (density: number) => {
-    if (density <= 0.3) return "bg-white border-slate-100";
-    if (density <= 0.7) return "bg-blue-200 border-blue-300";
-    return "bg-blue-600 border-blue-700";
+    if (density <= 0.3) return "bg-slate-50 border-slate-200";
+    if (density <= 0.7) return "bg-primary/20 border-primary/30";
+    return "bg-primary border-primary";
   };
 
   return (
@@ -113,15 +113,15 @@ export function NetworkHeatmap() {
         
         <div className="mt-8 flex items-center gap-6 text-xs font-outfit text-slate-500">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 bg-white border border-slate-200 rounded-sm" />
+            <div className="h-3 w-3 bg-slate-50 border border-slate-200 rounded-sm" />
             <span>Low (0-30%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 bg-blue-200 border border-blue-300 rounded-sm" />
+            <div className="h-3 w-3 bg-primary/20 border border-primary/30 rounded-sm" />
             <span>Medium (31-70%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 bg-blue-600 border border-blue-700 rounded-sm" />
+            <div className="h-3 w-3 bg-primary border border-primary rounded-sm" />
             <span>High (71-100%)</span>
           </div>
         </div>

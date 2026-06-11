@@ -57,6 +57,8 @@ export function BranchFilter() {
     } else {
       params.set("branchId", value);
     }
+    // Reset page number on branch change to prevent pagination overflow
+    params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   };
 

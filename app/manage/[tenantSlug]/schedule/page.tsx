@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { appointments } from "@/lib/db/schema";
+import { appointments, branches, services } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { getTenantId } from "@/lib/db/tenant";
 import { 
@@ -43,14 +43,24 @@ export default async function SchedulePage({
     conditions.push(eq(appointments.branchId, branchId));
   }
 
-  const weekAppointments = await db.query.appointments.findMany({
-    where: and(...conditions),
-    orderBy: [appointments.startTime],
-    with: {
-      branch: true,
-      service: true,
-    }
-  });
+  const weekAppointments = await db
+    .select({
+      id: appointments.id,
+      patientName: appointments.patientName,
+      patientEmail: appointments.patientEmail,
+      startTime: appointments.startTime,
+      endTime: appointments.endTime,
+      status: appointments.status,
+      riskScore: appointments.riskScore,
+      branchName: branches.name,
+      serviceName: services.name,
+      duration: services.duration,
+    })
+    .from(appointments)
+    .leftJoin(branches, eq(appointments.branchId, branches.id))
+    .leftJoin(services, eq(appointments.serviceId, services.id))
+    .where(and(...conditions))
+    .orderBy(appointments.startTime);
 
   const formattedAppointments = weekAppointments.map((app) => ({
     id: app.id,
@@ -60,9 +70,9 @@ export default async function SchedulePage({
     endTime: app.endTime.toISOString(),
     status: app.status,
     riskScore: app.riskScore,
-    branchName: app.branch.name,
-    serviceName: app.service.name,
-    duration: app.service.duration,
+    branchName: app.branchName || "Unknown Branch",
+    serviceName: app.serviceName || "Unknown Service",
+    duration: app.duration || 0,
   }));
 
   const prevWeek = format(subWeeks(selectedDate, 1), "yyyy-MM-dd");

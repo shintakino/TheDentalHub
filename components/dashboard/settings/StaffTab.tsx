@@ -121,7 +121,7 @@ export function StaffTab({ tenantId }: { tenantId: string }) {
                 <TableCell className="py-6">
                   <Badge variant="secondary" className={cn(
                     "rounded-lg px-2.5 py-0.5 font-outfit font-medium capitalize",
-                    member.role === "org:admin" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"
+                    member.role === "org:admin" ? "bg-amber-50 text-amber-700" : "bg-primary/5 text-primary"
                   )}>
                     {member.role === "org:admin" ? "Admin" : "Member"}
                   </Badge>
@@ -153,7 +153,7 @@ export function StaffTab({ tenantId }: { tenantId: string }) {
       </div>
 
       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-        <DialogContent className="sm:max-w-[450px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[450px] rounded-2xl border-none shadow-2xl p-0 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="p-8 pb-0">
             <DialogTitle className="text-2xl font-playfair font-semibold text-obsidian">
               Invite Team Member

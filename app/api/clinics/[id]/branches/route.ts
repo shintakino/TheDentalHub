@@ -53,13 +53,30 @@ export async function POST(
       return NextResponse.json({ error: validation.error.format() }, { status: 400 });
     }
 
-    const { address } = validation.data;
-    const coords = address ? await geocodeAddress(address) : null;
+    const { address, latitude, longitude, ...rest } = validation.data;
+    
+    let lat = latitude;
+    let lng = longitude;
+
+    if (!lat || !lng) {
+      const coords = address ? await geocodeAddress(address) : null;
+      if (coords) {
+        lat = coords.lat.toString();
+        lng = coords.lng.toString();
+      }
+    }
+
+    const slug = validation.data.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
 
     const [newBranch] = await db.insert(branches).values({
-      ...validation.data,
-      latitude: coords?.lat?.toString(),
-      longitude: coords?.lng?.toString(),
+      ...rest,
+      address,
+      slug,
+      latitude: lat,
+      longitude: lng,
       tenantId,
       isActive: validation.data.isActive ?? true,
       updatedAt: new Date(),

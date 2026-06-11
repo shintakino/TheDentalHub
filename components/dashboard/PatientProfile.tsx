@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { 
   CalendarDays, 
   Mail, 
@@ -14,6 +15,7 @@ import {
   History,
   Settings,
   ChevronRight,
+  ChevronLeft,
   Loader2,
   Plus,
   Send
@@ -112,7 +114,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
         <p className="font-outfit text-slate-500 text-lg">Loading patient command center...</p>
       </div>
     );
@@ -122,11 +124,22 @@ export function PatientProfile({ patientId }: { patientId: string }) {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Navigation */}
+      <Link 
+        href={`/manage/${tenantSlug}/patients`}
+        className="inline-flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-outfit font-medium group"
+      >
+        <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:bg-primary/5 transition-colors">
+          <ChevronLeft className="w-4 h-4" />
+        </div>
+        Back to Directory
+      </Link>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-transparent font-outfit px-3 py-1">
+            <Badge variant="outline" className="bg-primary/5 text-primary border-transparent font-outfit px-3 py-1">
               Active Patient
             </Badge>
             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-transparent font-outfit px-3 py-1">
@@ -157,7 +170,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
             <Send className="w-4 h-4 mr-2" />
             Send Message
           </Button>
-          <Button className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 shadow-[0_4px_20px_rgba(0,71,255,0.2)] font-outfit">
+          <Button className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/95 shadow-md shadow-primary/20 font-outfit text-white">
             <CalendarDays className="w-4 h-4 mr-2" />
             Book Appointment
           </Button>
@@ -165,12 +178,12 @@ export function PatientProfile({ patientId }: { patientId: string }) {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-8">
-        <TabsList className="bg-transparent border-b border-slate-100 w-full justify-start h-auto p-0 rounded-none gap-8">
+        <TabsList className="bg-transparent border-b border-slate-100 w-full justify-start h-auto p-0 rounded-none gap-8 overflow-x-auto flex-nowrap scrollbar-none max-w-full pb-0.5">
           {["overview", "history", "records", "communications", "settings"].map((tab) => (
             <TabsTrigger
               key={tab}
               value={tab}
-              className="px-0 py-4 border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none font-outfit text-base font-medium text-slate-500 data-[state=active]:text-blue-600 transition-all"
+              className="px-0 py-4 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-outfit text-base font-medium text-slate-500 data-[state=active]:text-primary transition-all shrink-0"
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </TabsTrigger>
@@ -204,14 +217,14 @@ export function PatientProfile({ patientId }: { patientId: string }) {
             <div className="md:col-span-2 space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-playfair font-semibold text-obsidian">Next Appointment</h3>
-                <Button variant="ghost" className="text-blue-600 hover:text-blue-700 font-outfit text-sm">
+                <Button variant="ghost" className="text-primary hover:text-primary/90 font-outfit text-sm">
                   View Schedule <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
               <Card className="p-8 rounded-2xl border-transparent bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                 {details.history.some(a => new Date(a.startTime) > new Date()) ? (
                   <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-2xl bg-blue-50 flex flex-col items-center justify-center text-blue-600">
+                    <div className="w-16 h-16 rounded-2xl bg-primary/5 flex flex-col items-center justify-center text-primary">
                       <span className="text-xs font-outfit font-bold uppercase">Oct</span>
                       <span className="text-2xl font-playfair font-bold">24</span>
                     </div>
@@ -232,7 +245,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
 
               <div className="flex items-center justify-between pt-4">
                 <h3 className="text-xl font-playfair font-semibold text-obsidian">Recent Clinical Notes</h3>
-                <Button variant="ghost" className="text-blue-600 hover:text-blue-700 font-outfit text-sm">
+                <Button variant="ghost" className="text-primary hover:text-primary/90 font-outfit text-sm">
                   All Records <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
@@ -261,7 +274,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
 
             <div className="space-y-6">
               <h3 className="text-xl font-playfair font-semibold text-obsidian">Loyalty Status</h3>
-              <Card className="p-8 rounded-3xl border-transparent bg-gradient-to-br from-blue-600 to-indigo-700 shadow-[0_20px_40px_rgba(0,71,255,0.2)] text-white space-y-6">
+              <Card className="p-8 rounded-3xl border-transparent bg-gradient-to-br from-primary to-indigo-800 shadow-[0_20px_40px_rgba(0,71,255,0.15)] text-white space-y-6">
                 <div className="flex items-center justify-between">
                   <Award className="w-8 h-8 opacity-80" />
                   <Badge className="bg-white/20 hover:bg-white/30 text-white border-transparent backdrop-blur-md">
@@ -270,10 +283,10 @@ export function PatientProfile({ patientId }: { patientId: string }) {
                 </div>
                 <div className="space-y-1">
                   <p className="text-4xl font-playfair font-bold">{details.profile?.loyaltyPoints || 0}</p>
-                  <p className="font-outfit text-blue-100 text-sm opacity-80 uppercase tracking-widest">Available Points</p>
+                  <p className="font-outfit text-white/80 text-sm uppercase tracking-widest">Available Points</p>
                 </div>
                 <div className="pt-4">
-                  <Button className="w-full bg-white text-blue-600 hover:bg-blue-50 rounded-xl font-bold font-outfit">
+                  <Button className="w-full bg-white text-primary hover:bg-primary/5 rounded-xl font-bold font-outfit">
                     Redeem Points
                   </Button>
                 </div>
@@ -331,7 +344,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
             <div className="relative border-l-2 border-slate-100 ml-4 space-y-12">
               {details.history.map((apt) => (
                 <div key={apt.id} className="relative pl-10 group">
-                  <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-blue-600 group-hover:scale-125 transition-transform" />
+                  <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-primary group-hover:scale-125 transition-transform" />
                   <div className="space-y-4">
                     <p className="font-outfit text-sm text-slate-400 font-medium uppercase tracking-wider">
                       {format(new Date(apt.startTime), "MMMM d, yyyy")}
@@ -345,7 +358,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
                         <Badge variant="outline" className={`font-outfit capitalize px-4 py-1.5 rounded-full border-transparent ${
                           apt.status === 'completed' ? 'bg-mint-50 text-mint-700' :
                           apt.status === 'cancelled' ? 'bg-rose-50 text-rose-700' :
-                          'bg-blue-50 text-blue-700'
+                          'bg-primary/5 text-primary'
                         }`}>
                           {apt.status.replace('_', ' ')}
                         </Badge>
@@ -371,7 +384,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
           <div className="max-w-4xl mx-auto space-y-8 py-8">
             <div className="flex items-center justify-between">
               <h3 className="text-2xl font-playfair font-semibold text-obsidian">Clinical Records</h3>
-              <Button className="rounded-xl bg-blue-600 font-outfit">
+              <Button className="rounded-xl bg-primary hover:bg-primary/95 text-white font-outfit">
                 <Plus className="w-4 h-4 mr-2" /> New Entry
               </Button>
             </div>
@@ -445,7 +458,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
                 </div>
                 <div className="flex items-center gap-4">
                   <Input placeholder="Enter amount (e.g. 500)" className="h-11 rounded-lg font-outfit" type="number" />
-                  <Button className="h-11 px-6 rounded-lg bg-blue-600 font-outfit">Update Balance</Button>
+                  <Button className="h-11 px-6 rounded-lg bg-primary hover:bg-primary/95 text-white font-outfit">Update Balance</Button>
                 </div>
               </Card>
 

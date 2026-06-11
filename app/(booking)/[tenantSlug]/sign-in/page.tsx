@@ -1,7 +1,5 @@
 import { SignIn } from "@clerk/nextjs";
-import { db } from "@/lib/db";
-import { clinics } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { getCachedClinicBySubdomain } from "@/lib/db/cache";
 import { notFound } from "next/navigation";
 
 export default async function BrandedSignInPage({
@@ -13,9 +11,7 @@ export default async function BrandedSignInPage({
 }) {
   const { tenantSlug } = await params;
   const { redirect_url } = await searchParams;
-  const clinic = await db.query.clinics.findFirst({
-    where: eq(clinics.subdomain, tenantSlug),
-  });
+  const clinic = await getCachedClinicBySubdomain(tenantSlug);
 
   if (!clinic) notFound();
 

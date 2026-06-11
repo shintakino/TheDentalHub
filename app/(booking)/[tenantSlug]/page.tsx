@@ -1,6 +1,4 @@
-import { db } from "@/lib/db";
-import { clinics, branches, services } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { getCachedClinicBySubdomain, getCachedBranches, getCachedServices } from "@/lib/db/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,19 +11,13 @@ export default async function ClinicLandingPage({
 }) {
   const { tenantSlug } = await params;
 
-  const clinic = await db.query.clinics.findFirst({
-    where: eq(clinics.subdomain, tenantSlug),
-  });
+  const clinic = await getCachedClinicBySubdomain(tenantSlug);
 
   if (!clinic) notFound();
 
   const [allBranches, allServices] = await Promise.all([
-    db.query.branches.findMany({
-      where: eq(branches.tenantId, clinic.tenantId),
-    }),
-    db.query.services.findMany({
-      where: eq(services.tenantId, clinic.tenantId),
-    }),
+    getCachedBranches(clinic.tenantId),
+    getCachedServices(clinic.tenantId),
   ]);
 
   return (

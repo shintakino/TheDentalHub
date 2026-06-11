@@ -1,6 +1,6 @@
 "use client";
 
-import { ServiceConfig } from "@/lib/db/mock-db";
+import { Service } from "@/lib/db/schema";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
@@ -11,7 +11,7 @@ export function ServiceStep({
   campaignCode
 }: { 
   tenantSlug: string; 
-  services: any[]; 
+  services: Service[]; 
   skipBranch: boolean;
   campaignCode?: string;
 }) {

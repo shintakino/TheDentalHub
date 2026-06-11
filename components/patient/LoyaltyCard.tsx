@@ -13,7 +13,7 @@ export function LoyaltyCard({ points }: LoyaltyCardProps) {
   const progress = Math.min((points / nextRewardPoints) * 100, 100);
 
   return (
-    <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-indigo-600 to-blue-700 text-white">
+    <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-[#0A1120] to-primary text-white">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-medium font-outfit">Loyalty Program</CardTitle>
         <div className="bg-white/20 p-2 rounded-full">

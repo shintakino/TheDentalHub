@@ -3,6 +3,8 @@ import { getTenantId } from "@/lib/db/tenant";
 import { db } from "@/lib/db";
 import { clinics } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IdentityTab } from "@/components/dashboard/branding/IdentityTab";
 import { AppearanceTab } from "@/components/dashboard/branding/AppearanceTab";
@@ -22,6 +24,11 @@ async function BrandingContent() {
 
   if (!clinic) {
     return <div>Clinic not found.</div>;
+  }
+
+  const { orgRole } = await auth();
+  if (orgRole !== "org:admin") {
+    redirect(`/manage/${tenantId}/overview`);
   }
 
   // Ensure primaryColor has a default if null in DB (shouldn't be based on schema default)

@@ -3,6 +3,8 @@ import { getTenantId } from "@/lib/db/tenant";
 import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
 import { format, subDays } from "date-fns";
 import { BranchFilter } from "@/components/dashboard/BranchFilter";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 export default async function FinancialsPage({
   searchParams,
@@ -10,6 +12,12 @@ export default async function FinancialsPage({
   searchParams: Promise<{ startDate?: string; endDate?: string; branchId?: string }>;
 }) {
   const tenantId = await getTenantId();
+  const { orgRole } = await auth();
+
+  if (orgRole !== "org:admin") {
+    redirect(`/manage/${tenantId}/overview`);
+  }
+
   const resolvedParams = await searchParams;
   
   const endDate = resolvedParams.endDate || format(new Date(), "yyyy-MM-dd");

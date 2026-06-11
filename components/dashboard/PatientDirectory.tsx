@@ -41,7 +41,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Pagination } from "@/components/ui/pagination";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 
 interface Patient {
   id: string;
@@ -52,23 +55,40 @@ interface Patient {
   loyaltyPoints: number;
 }
 
-export function PatientDirectory() {
+export function PatientDirectory({ branchId }: { branchId?: string }) {
   const params = useParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const tenantSlug = params.tenantSlug as string;
+  
+  // URL parameters
+  const page = Number(searchParams.get("page")) || 1;
+  const activeBranchId = branchId || searchParams.get("branchId") || "all";
+  const pageSize = 10;
+
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newPatient, setNewPatient] = useState({ name: "", email: "", phone: "" });
 
-  const fetchPatients = async (searchTerm: string = "") => {
+  const fetchPatients = async (searchTerm: string = "", pageNum: number = 1, selectedBranch: string = "all") => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/clinics/${tenantSlug}/patients?search=${searchTerm}`);
+      const offset = (pageNum - 1) * pageSize;
+      let url = `/api/clinics/${tenantSlug}/patients?search=${searchTerm}&limit=${pageSize}&offset=${offset}`;
+      if (selectedBranch !== "all") {
+        url += `&branchId=${selectedBranch}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch patients");
-      const data = await response.json();
-      setPatients(data);
+      const result = await response.json();
+      setPatients(result.data || []);
+      setTotalCount(result.totalCount || 0);
     } catch (error) {
       console.error("Error fetching patients:", error);
       toast.error("Failed to load patients");
@@ -79,11 +99,18 @@ export function PatientDirectory() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      fetchPatients(search);
+      fetchPatients(search, page, activeBranchId);
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [search]);
+  }, [search, page, activeBranchId]);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    const newParams = new URLSearchParams(searchParams.toString());
+    newParams.delete("page"); // Reset page when query changes
+    router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+  };
 
   const handleCreatePatient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +127,7 @@ export function PatientDirectory() {
       toast.success("Patient created successfully");
       setIsCreateDialogOpen(false);
       setNewPatient({ name: "", email: "", phone: "" });
-      fetchPatients(search);
+      fetchPatients(search, page, activeBranchId);
     } catch (error) {
       console.error("Error creating patient:", error);
       toast.error("Failed to create patient");
@@ -113,12 +140,12 @@ export function PatientDirectory() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
           <Input
             placeholder="Search patients by name or email..."
-            className="pl-11 h-12 rounded-xl border-transparent bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] focus:ring-2 focus:ring-blue-600/20 transition-all font-outfit"
+            className="pl-11 h-12 rounded-xl border-transparent bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] focus:ring-2 focus:ring-primary/20 transition-all font-outfit"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
           />
         </div>
 
@@ -131,7 +158,7 @@ export function PatientDirectory() {
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger
               render={
-                <Button className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 shadow-[0_4px_20px_rgba(0,71,255,0.2)] font-outfit">
+                <Button className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-outfit">
                   <UserPlus className="w-4 h-4 mr-2" />
                   Add Patient
                 </Button>
@@ -182,7 +209,7 @@ export function PatientDirectory() {
                 <DialogFooter>
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-blue-600 hover:bg-blue-700 rounded-lg font-outfit"
+                    className="w-full h-11 bg-primary hover:bg-primary/90 rounded-lg font-outfit shadow-md shadow-primary/10"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -195,50 +222,45 @@ export function PatientDirectory() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden border-transparent">
-        <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="font-outfit text-slate-500 py-6 px-8">Patient Name</TableHead>
-              <TableHead className="font-outfit text-slate-500 py-6 px-8">Contact Info</TableHead>
-              <TableHead className="font-outfit text-slate-500 py-6 px-8">Last Visit</TableHead>
-              <TableHead className="font-outfit text-slate-500 py-6 px-8 text-center">Total Visits</TableHead>
-              <TableHead className="font-outfit text-slate-500 py-6 px-8 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading && patients.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-64 text-center">
-                  <div className="flex flex-col items-center gap-2 text-slate-400">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                    <span className="font-outfit">Loading patients...</span>
-                  </div>
-                </TableCell>
+      {loading ? (
+        <TableSkeleton columnsCount={5} rowsCount={5} />
+      ) : patients.length === 0 ? (
+        <EmptyState
+          icon={Search}
+          title="No patients found"
+          description={search ? "Try adjusting your search query or branch filter." : "Get started by adding your first patient record."}
+          action={
+            !search && (
+              <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-primary hover:bg-primary/90">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Patient
+              </Button>
+            )
+          }
+        />
+      ) : (
+        <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden border-transparent">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="hover:bg-transparent border-slate-100">
+                <TableHead className="font-outfit text-slate-500 py-6 px-8">Patient Name</TableHead>
+                <TableHead className="font-outfit text-slate-500 py-6 px-8">Contact Info</TableHead>
+                <TableHead className="font-outfit text-slate-500 py-6 px-8">Last Visit</TableHead>
+                <TableHead className="font-outfit text-slate-500 py-6 px-8 text-center">Total Visits</TableHead>
+                <TableHead className="font-outfit text-slate-500 py-6 px-8 text-right">Actions</TableHead>
               </TableRow>
-            ) : patients.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-64 text-center">
-                  <div className="flex flex-col items-center gap-2 text-slate-400">
-                    <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-2">
-                      <Search className="w-6 h-6" />
-                    </div>
-                    <span className="font-outfit text-lg font-medium">No patients found</span>
-                    <p className="text-sm">Try adjusting your search or filters.</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              patients.map((patient) => (
+            </TableHeader>
+            <TableBody>
+              {patients.map((patient) => (
                 <TableRow key={patient.id} className="hover:bg-slate-50/50 border-slate-100 transition-colors group">
                   <TableCell className="py-6 px-8">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-outfit font-semibold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-primary/5 text-primary flex items-center justify-center font-outfit font-semibold text-sm">
                         {patient.name.charAt(0)}
                       </div>
                       <Link 
                         href={`/manage/${tenantSlug}/patients/${patient.id}`}
-                        className="font-semibold text-obsidian font-outfit hover:text-blue-600 transition-colors"
+                        className="font-semibold text-obsidian font-outfit hover:text-primary transition-colors"
                       >
                         {patient.name}
                       </Link>
@@ -260,7 +282,7 @@ export function PatientDirectory() {
                     {patient.lastVisit ? format(new Date(patient.lastVisit), "MMM d, yyyy") : "Never"}
                   </TableCell>
                   <TableCell className="py-6 px-8 text-center">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 font-outfit">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/5 text-primary font-outfit">
                       {patient.totalAppointments} visits
                     </span>
                   </TableCell>
@@ -293,11 +315,16 @@ export function PatientDirectory() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+          <Pagination
+            totalCount={totalCount}
+            pageSize={pageSize}
+            currentPage={page}
+          />
+        </div>
+      )}
     </div>
   );
 }

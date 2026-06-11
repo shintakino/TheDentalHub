@@ -4,6 +4,8 @@ import { services } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { serviceSchema } from "@/lib/validations";
 import { auth } from "@clerk/nextjs/server";
+import { getCachedServices } from "@/lib/db/cache";
+import { revalidateTag } from "next/cache";
 
 export async function GET(
   request: NextRequest,
@@ -25,10 +27,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized: Organization mismatch" }, { status: 401 });
     }
 
-    const clinicServices = await db.query.services.findMany({
-      where: eq(services.tenantId, tenantId),
-      orderBy: (services, { asc }) => [asc(services.name)],
-    });
+    const clinicServices = await getCachedServices(tenantId);
 
     console.log(`API: Successfully fetched ${clinicServices.length} services`);
     return NextResponse.json(clinicServices);
@@ -66,6 +65,9 @@ export async function POST(
       tenantId,
       updatedAt: new Date(),
     }).returning();
+
+    // Invalidate cached services catalog
+    revalidateTag(`services-${tenantId}`, "max");
 
     return NextResponse.json(newService);
   } catch (error) {

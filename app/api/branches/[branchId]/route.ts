@@ -29,25 +29,36 @@ export async function PATCH(
       return NextResponse.json({ error: validation.error.format() }, { status: 400 });
     }
 
-    const { address, ...rest } = validation.data;
+    const { address, latitude, longitude, ...rest } = validation.data;
     
-    let latitude: string | undefined;
-    let longitude: string | undefined;
+    let lat = latitude;
+    let lng = longitude;
 
-    if (address) {
-      const coords = await geocodeAddress(address);
-      if (coords) {
-        latitude = coords.lat.toString();
-        longitude = coords.lng.toString();
+    const shouldUpdateCoords = (latitude !== undefined || longitude !== undefined || address !== undefined);
+
+    if (shouldUpdateCoords && (!lat || !lng)) {
+      if (address) {
+        const coords = await geocodeAddress(address);
+        if (coords) {
+          lat = coords.lat.toString();
+          lng = coords.lng.toString();
+        }
       }
     }
+
+    const slug = rest.name
+      ? rest.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "")
+      : undefined;
 
     const [updatedBranch] = await db.update(branches)
       .set({
         ...rest,
         address,
-        ...(latitude && { latitude }),
-        ...(longitude && { longitude }),
+        ...(slug && { slug }),
+        ...(shouldUpdateCoords && { latitude: lat, longitude: lng }),
         updatedAt: new Date() 
       })
       .where(and(

@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,9 +46,19 @@ interface Appointment {
 export function DailySchedule({ initialAppointments }: { initialAppointments: Appointment[] }) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
 
+  const router = useRouter();
+  
   useEffect(() => {
     setAppointments(initialAppointments);
   }, [initialAppointments]);
+
+  // Poll for real-time updates every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [router]);
 
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [noteContent, setNoteContent] = useState("");
@@ -122,10 +133,10 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
 
   const getStatusColor = (status: AppointmentStatus) => {
     switch (status) {
-      case "pending_approval": return "bg-indigo-100 text-indigo-800 border-indigo-200";
+      case "pending_approval": return "bg-primary/5 text-primary/80 border-primary/10 border-dashed";
       case "confirmed": return "bg-slate-100 text-slate-800 border-slate-200";
       case "checked_in": return "bg-amber-100 text-amber-800 border-amber-200";
-      case "in_progress": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "in_progress": return "bg-primary/10 text-primary border-primary/20";
       case "completed": return "bg-emerald-100 text-emerald-800 border-emerald-200";
       case "cancelled":
       case "no_show": return "bg-rose-100 text-rose-800 border-rose-200";
@@ -226,12 +237,12 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
                           </Button>
                         )}
                         {validNextStates.includes("checked_in") && (
-                          <Button size="sm" className="bg-sapphire hover:bg-blue-700 text-white font-outfit font-medium px-6" disabled={loadingId === app.id} onClick={() => setConfirmAction({ id: app.id, status: "checked_in", label: "Check In" })}>
+                          <Button size="sm" className="bg-primary hover:bg-primary/90 text-white font-outfit font-medium px-6" disabled={loadingId === app.id} onClick={() => setConfirmAction({ id: app.id, status: "checked_in", label: "Check In" })}>
                             Check In
                           </Button>
                         )}
                         {validNextStates.includes("in_progress") && (
-                          <Button size="sm" className="bg-sapphire hover:bg-blue-700 text-white font-outfit font-medium px-6" disabled={loadingId === app.id} onClick={() => setConfirmAction({ id: app.id, status: "in_progress", label: "Start Service" })}>
+                          <Button size="sm" className="bg-primary hover:bg-primary/90 text-white font-outfit font-medium px-6" disabled={loadingId === app.id} onClick={() => setConfirmAction({ id: app.id, status: "in_progress", label: "Start Service" })}>
                             Start
                           </Button>
                         )}
@@ -350,7 +361,7 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
                     
                     {AppointmentStateMachine.getValidNextStates(selectedAppointment.status).includes("checked_in") && (
                       <Button 
-                        className="bg-sapphire hover:bg-blue-700 text-white w-full h-12" 
+                        className="bg-primary hover:bg-primary/90 text-white w-full h-12" 
                         disabled={loadingId === selectedAppointment.id} 
                         onClick={() => setConfirmAction({ id: selectedAppointment.id, status: "checked_in", label: "Check In" })}
                       >
@@ -360,7 +371,7 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
 
                     {AppointmentStateMachine.getValidNextStates(selectedAppointment.status).includes("in_progress") && (
                       <Button 
-                        className="bg-sapphire hover:bg-blue-700 text-white w-full h-12" 
+                        className="bg-primary hover:bg-primary/90 text-white w-full h-12" 
                         disabled={loadingId === selectedAppointment.id} 
                         onClick={() => setConfirmAction({ id: selectedAppointment.id, status: "in_progress", label: "Start Service" })}
                       >
@@ -421,12 +432,12 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
                 placeholder="Enter treatment details, observations, or next steps..."
                 value={noteContent}
                 onChange={(e) => setNoteContent(e.target.value)}
-                className="min-h-[150px] border-slate-200 focus:ring-sapphire focus:border-sapphire font-outfit text-base"
+                className="min-h-[150px] border-slate-200 focus:ring-primary focus:border-primary font-outfit text-base"
               />
             </div>
             <DialogFooter>
               <Button variant="ghost" onClick={() => setIsNoteDialogOpen(false)} disabled={loadingId !== null}>Cancel</Button>
-              <Button className="bg-sapphire hover:bg-blue-700 text-white" onClick={handleAddNote} disabled={loadingId !== null || !noteContent.trim()}>
+              <Button className="bg-primary hover:bg-primary/90 text-white" onClick={handleAddNote} disabled={loadingId !== null || !noteContent.trim()}>
                 Save Note
               </Button>
             </DialogFooter>
@@ -484,7 +495,7 @@ export function DailySchedule({ initialAppointments }: { initialAppointments: Ap
               <Button 
                 className={cn(
                   "px-8",
-                  confirmAction?.status === 'cancelled' ? "bg-rose-600 hover:bg-rose-700 text-white" : "bg-sapphire hover:bg-blue-700 text-white"
+                  confirmAction?.status === 'cancelled' ? "bg-rose-600 hover:bg-rose-700 text-white" : "bg-primary hover:bg-primary/90 text-white"
                 )}
                 onClick={() => confirmAction && handleStatusChange(confirmAction.id, confirmAction.status)}
                 disabled={loadingId !== null}

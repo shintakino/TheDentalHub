@@ -1,6 +1,6 @@
 "use client";
 
-import { BranchConfig } from "@/lib/db/mock-db";
+import { Branch } from "@/lib/db/schema";
 import Link from "next/link";
 
 export function BranchStep({ 
@@ -10,7 +10,7 @@ export function BranchStep({
   campaignCode
 }: { 
   tenantSlug: string; 
-  branches: any[]; 
+  branches: Branch[]; 
   serviceId: string;
   campaignCode?: string;
 }) {

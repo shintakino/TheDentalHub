@@ -326,12 +326,14 @@ export function BranchManager({ tenantId }: { tenantId: string }) {
                               <Clock className="w-4 h-4 text-amber-500" />
                               Manage Disruptions
                             </DropdownMenuItem>
-                            <Link href={`/manage/branches/${branch.id}`} className="block">
-                              <DropdownMenuItem className="gap-2 cursor-pointer py-2.5 rounded-lg">
-                                <ExternalLink className="w-4 h-4" />
-                                View Full Schedule
-                              </DropdownMenuItem>
-                            </Link>
+                            <DropdownMenuItem
+                              render={
+                                <Link href={`/manage/${tenantId}/branch/${branch.slug}/schedule`} className="gap-2 cursor-pointer py-2.5 rounded-lg flex items-center">
+                                  <ExternalLink className="w-4 h-4" />
+                                  View Full Schedule
+                                </Link>
+                              }
+                            />
                             <div className="h-px bg-slate-100 my-1" />
                             <DropdownMenuItem 
                               onClick={() => handleDelete(branch.id)} 
@@ -353,7 +355,7 @@ export function BranchManager({ tenantId }: { tenantId: string }) {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] rounded-3xl border-none shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[700px] rounded-3xl border-none shadow-2xl p-0 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="p-8 pb-0">
             <DialogTitle className="text-3xl font-playfair font-bold text-obsidian">
               {editingBranch ? "Branch Configuration" : "New Location Entry"}

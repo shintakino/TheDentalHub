@@ -18,7 +18,7 @@ interface AnalyticsOverviewProps {
 
 export function AnalyticsOverview({ data, comparativeData, recommendations }: AnalyticsOverviewProps) {
   const stats = [
-    { title: "Total Bookings", value: data.summary.totalBookings, icon: Calendar, color: "text-blue-600" },
+    { title: "Total Bookings", value: data.summary.totalBookings, icon: Calendar, color: "text-primary" },
     { title: "No-Show Rate", value: `${(data.summary.noShowRate * 100).toFixed(1)}%`, icon: AlertCircle, color: "text-rose-600" },
     { title: "Avg Utilization", value: `${(data.summary.avgUtilization * 100).toFixed(0)}%`, icon: Users, color: "text-emerald-600" },
     { title: "Peak Hour", value: data.summary.peakHour, icon: Clock, color: "text-amber-600" },
@@ -86,7 +86,7 @@ export function AnalyticsOverview({ data, comparativeData, recommendations }: An
                 <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip />
-                <Line type="monotone" dataKey="bookings" stroke="#0047FF" strokeWidth={3} dot={false} />
+                <Line type="monotone" dataKey="bookings" stroke="var(--primary)" strokeWidth={3} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -118,7 +118,7 @@ export function AnalyticsOverview({ data, comparativeData, recommendations }: An
                       </div>
                       <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full ${branch.utilization > 0.8 ? 'bg-rose-500' : branch.utilization > 0.5 ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                          className={`h-full ${branch.utilization > 0.8 ? 'bg-rose-500' : branch.utilization > 0.5 ? 'bg-emerald-500' : 'bg-primary'}`}
                           style={{ width: `${branch.utilization * 100}%` }}
                         />
                       </div>
@@ -139,7 +139,7 @@ export function AnalyticsOverview({ data, comparativeData, recommendations }: An
                   <XAxis dataKey="hour" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#0047FF" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

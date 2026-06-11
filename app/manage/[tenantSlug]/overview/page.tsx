@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { auth } from "@clerk/nextjs/server";
 
 export default async function DashboardPage({
   params,
@@ -23,6 +24,8 @@ export default async function DashboardPage({
   const { tenantSlug } = await params;
   const { branchId } = await searchParams;
   const tenantId = await getTenantId();
+  const { orgRole } = await auth();
+  const isAdmin = orgRole === "org:admin";
 
   // Fetch today's appointments for this tenant
   const today = new Date();
@@ -72,7 +75,12 @@ export default async function DashboardPage({
   };
 
   // Fetch Recent Activity
-  const recentLogs = await db
+  const recentLogsConditions = [eq(auditLogs.tenantId, tenantId)];
+  if (branchId) {
+    recentLogsConditions.push(eq(appointments.branchId, branchId));
+  }
+
+  const filteredLogs = await db
     .select({
       id: auditLogs.id,
       action: auditLogs.action,
@@ -85,14 +93,9 @@ export default async function DashboardPage({
     })
     .from(auditLogs)
     .leftJoin(appointments, eq(appointments.id, auditLogs.appointmentId))
-    .where(eq(auditLogs.tenantId, tenantId))
+    .where(and(...recentLogsConditions))
     .limit(5)
     .orderBy(desc(auditLogs.createdAt));
-
-  // Filter logs if branchId is provided
-  const filteredLogs = branchId 
-    ? recentLogs.filter(log => log.appointment?.branchId === branchId)
-    : recentLogs;
 
   // Fetch Recommendations (only on "All Branches" view or always?)
   // Spec says: "Intelligence Alerts: 'System Recommendations' section on the Overview page"
@@ -144,7 +147,7 @@ export default async function DashboardPage({
         <WaitlistManager />
       </div>
 
-      {!branchId && recommendations.length > 0 && (
+      {!branchId && recommendations.length > 0 && isAdmin && (
         <div className="mb-12">
           <Card className="border-none shadow-[0_4px_32px_rgba(255,107,0,0.1)] bg-amber-50/30 overflow-hidden">
             <CardHeader className="bg-amber-50/50 pb-4 flex flex-row items-center justify-between">
@@ -180,9 +183,9 @@ export default async function DashboardPage({
         </div>
       )}
 
-      <QuickActions tenantSlug={tenantSlug} />
+      <QuickActions tenantSlug={tenantSlug} isAdmin={isAdmin} />
       
-      {!branchId && lowStockItems.length > 0 && (
+      {!branchId && lowStockItems.length > 0 && isAdmin && (
         <LowStockWidget items={lowStockItems} tenantSlug={tenantSlug} />
       )}
 

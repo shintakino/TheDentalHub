@@ -175,7 +175,7 @@ export function CampaignManager({ tenantId }: { tenantId: string }) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active": return "bg-blue-500/10 text-blue-600 border-blue-500/20";
+      case "active": return "bg-primary/10 text-primary border-primary/20";
       case "completed": return "bg-slate-500/10 text-slate-600 border-slate-500/20";
       case "draft": return "bg-amber-500/10 text-amber-600 border-amber-500/20";
       case "cancelled": return "bg-destructive/10 text-destructive border-destructive/20";

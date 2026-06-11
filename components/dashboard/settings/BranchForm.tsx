@@ -50,6 +50,8 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
       operatingHours: initialData.operatingHours,
       maxCapacity: initialData.maxCapacity ?? 1,
       isActive: initialData.isActive ?? true,
+      latitude: initialData.latitude || null,
+      longitude: initialData.longitude || null,
     } : {
       name: "",
       address: "",
@@ -57,10 +59,14 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
       operatingHours: defaultOperatingHours,
       maxCapacity: 1,
       isActive: true,
+      latitude: null,
+      longitude: null,
     },
   });
 
   const address = form.watch("address");
+  const latitude = form.watch("latitude");
+  const longitude = form.watch("longitude");
 
   const onSubmit = async (values: BranchPayload) => {
     try {
@@ -91,7 +97,7 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
           <div className="space-y-0.5">
-            <FormLabel className="text-base font-outfit text-obsidian">Branch Status</FormLabel>
+            <label className="text-base font-outfit text-obsidian font-semibold">Branch Status</label>
             <p className="text-sm text-slate-500 font-outfit">Allow this branch to accept appointments.</p>
           </div>
           <FormField
@@ -175,21 +181,35 @@ export function BranchForm({ tenantId, initialData, onSuccess }: BranchFormProps
               </FormItem>
             )}
           />
-          <BranchMapPreview address={address || ""} />
+          <BranchMapPreview 
+            address={address || ""} 
+            latitude={latitude}
+            longitude={longitude}
+            onCoordsChange={(lat, lng) => {
+              form.setValue("latitude", lat, { shouldDirty: true });
+              form.setValue("longitude", lng, { shouldDirty: true });
+            }}
+            onAddressChange={(addr) => {
+              form.setValue("address", addr, { shouldDirty: true });
+            }}
+          />
         </div>
 
         <div className="space-y-4">
-          <FormLabel className="font-outfit text-slate-600">Operating Hours</FormLabel>
+          <label className="text-sm font-medium font-outfit text-slate-600">Operating Hours</label>
           <FormField
             control={form.control}
             name="operatingHours"
             render={({ field }) => (
-              <FormControl>
-                <OperatingHoursEditor 
-                  value={field.value} 
-                  onChange={field.onChange} 
-                />
-              </FormControl>
+              <FormItem>
+                <FormControl>
+                  <OperatingHoursEditor 
+                    value={field.value} 
+                    onChange={field.onChange} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
         </div>

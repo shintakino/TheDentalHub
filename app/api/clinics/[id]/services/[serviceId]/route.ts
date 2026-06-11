@@ -4,6 +4,7 @@ import { services, appointments } from "@/lib/db/schema";
 import { eq, and, gt } from "drizzle-orm";
 import { serviceSchema } from "@/lib/validations";
 import { auth } from "@clerk/nextjs/server";
+import { revalidateTag } from "next/cache";
 
 export async function PATCH(
   request: NextRequest,
@@ -42,6 +43,9 @@ export async function PATCH(
     if (!updatedService) {
       return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
+
+    // Invalidate cached services catalog
+    revalidateTag(`services-${tenantId}`, "max");
 
     return NextResponse.json(updatedService);
   } catch (error) {
@@ -91,6 +95,9 @@ export async function DELETE(
     if (!deletedService) {
       return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
+
+    // Invalidate cached services catalog
+    revalidateTag(`services-${tenantId}`, "max");
 
     return NextResponse.json({ success: true });
   } catch (error) {

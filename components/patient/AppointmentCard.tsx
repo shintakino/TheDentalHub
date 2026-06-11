@@ -61,13 +61,13 @@ export function AppointmentCard({ appointment, isUpcoming }: AppointmentCardProp
   };
 
   const statusColors: Record<AppointmentStatus, string> = {
-    pending_approval: "bg-indigo-100 text-indigo-800",
-    confirmed: "bg-green-100 text-green-800",
-    cancelled: "bg-red-100 text-red-800",
-    completed: "bg-blue-100 text-blue-800",
-    no_show: "bg-gray-100 text-gray-800",
-    checked_in: "bg-emerald-100 text-emerald-800",
-    in_progress: "bg-amber-100 text-amber-800",
+    pending_approval: "bg-slate-100 text-slate-800",
+    confirmed: "bg-emerald-100 text-emerald-800",
+    cancelled: "bg-rose-100 text-rose-800",
+    completed: "bg-emerald-100 text-emerald-800",
+    no_show: "bg-rose-100 text-rose-800",
+    checked_in: "bg-amber-100 text-amber-800",
+    in_progress: "bg-primary/10 text-primary",
   };
 
   const canCancel = isUpcoming && (appointment.status === "confirmed" || appointment.status === "pending_approval") && 

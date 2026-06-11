@@ -26,7 +26,8 @@ import {
   Plus, 
   Trash2, 
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Filter
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 interface Staff {
   id: string;
@@ -70,12 +72,19 @@ const DAYS = [
   { label: "Sun", value: 0 },
 ];
 
-export function StaffRoster({ tenantId }: { tenantId: string }) {
+export function StaffRoster({ tenantId, branchId, isAdmin = true }: { tenantId: string; branchId?: string; isAdmin?: boolean }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const urlBranchId = branchId || searchParams.get("branchId") || "all";
+
   const [staff, setStaff] = useState<Staff[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
   
   // Form state for new assignment
   const [selectedStaff, setSelectedStaff] = useState<string>("");
@@ -116,6 +125,31 @@ export function StaffRoster({ tenantId }: { tenantId: string }) {
   useEffect(() => {
     fetchData();
   }, [tenantId]);
+
+  useEffect(() => {
+    setSelectedBranchId(urlBranchId);
+  }, [urlBranchId]);
+
+  useEffect(() => {
+    if (selectedBranchId !== "all") {
+      setSelectedBranch(selectedBranchId);
+    } else {
+      setSelectedBranch("");
+    }
+  }, [selectedBranchId]);
+
+  const handleBranchChange = (value: string | null) => {
+    if (branchId) return; // Prevent change if locked by prop
+    if (!value) return;
+    setSelectedBranchId(value);
+    const newParams = new URLSearchParams(searchParams.toString());
+    if (value === "all") {
+      newParams.delete("branchId");
+    } else {
+      newParams.set("branchId", value);
+    }
+    router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+  };
 
   const handleAddAssignment = async () => {
     if (!selectedStaff || !selectedBranch || !startTime || !endTime) {
@@ -161,7 +195,11 @@ export function StaffRoster({ tenantId }: { tenantId: string }) {
   };
 
   const getAssignmentsFor = (staffId: string, dayValue: number) => {
-    return assignments.filter(a => a.staffId === staffId && a.dayOfWeek === dayValue);
+    return assignments.filter(a => 
+      a.staffId === staffId && 
+      a.dayOfWeek === dayValue && 
+      (selectedBranchId === "all" || a.branchId === selectedBranchId)
+    );
   };
 
   const getCapacityWarning = (branchId: string, dayValue: number) => {
@@ -187,15 +225,16 @@ export function StaffRoster({ tenantId }: { tenantId: string }) {
           <h2 className="text-2xl font-playfair font-bold text-obsidian">Staff Roster</h2>
           <p className="text-slate-500 font-outfit mt-1">Allocate human capital across your branches.</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger 
-            render={
-              <Button className="bg-primary hover:bg-primary/90 rounded-xl gap-2">
-                <Plus className="w-4 h-4" />
-                Add Assignment
-              </Button>
-            }
-          />
+          {isAdmin && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger 
+                render={
+                  <Button className="bg-primary hover:bg-primary/90 rounded-xl gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Assignment
+                  </Button>
+                }
+              />
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>New Staff Assignment</DialogTitle>
@@ -229,7 +268,11 @@ export function StaffRoster({ tenantId }: { tenantId: string }) {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="branch">Target Branch</Label>
-                <Select value={selectedBranch} onValueChange={(v) => setSelectedBranch(v || "")}>
+                <Select 
+                  value={selectedBranch} 
+                  onValueChange={(v) => setSelectedBranch(v || "")}
+                  disabled={selectedBranchId !== "all"}
+                >
                   <SelectTrigger id="branch">
                     <SelectValue placeholder="Select branch" />
                   </SelectTrigger>
@@ -267,7 +310,25 @@ export function StaffRoster({ tenantId }: { tenantId: string }) {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
+
+      {!branchId && (
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={selectedBranchId} onValueChange={handleBranchChange}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="All Branches" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Branches</SelectItem>
+              {branches.map(branch => (
+                <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden border border-slate-50">
         <div className="overflow-x-auto">
@@ -309,18 +370,19 @@ export function StaffRoster({ tenantId }: { tenantId: string }) {
                               const warning = getCapacityWarning(as.branchId, day.value);
                               return (
                                 <div key={as.id} className="group relative">
-                                  <Badge 
-                                    variant="secondary" 
-                                    className={`w-full py-1.5 px-3 flex flex-col items-start gap-1 rounded-lg border border-slate-100 ${warning ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-white text-slate-600'}`}
+                                  <div 
+                                    className={`w-full py-2 px-3 flex flex-col items-start gap-1 rounded-lg border border-slate-100 shadow-xs text-slate-600 font-outfit ${warning ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-white text-slate-600'}`}
                                   >
                                     <div className="flex items-center justify-between w-full">
-                                      <span className="font-semibold text-[10px] truncate">{branch?.name || "Unknown"}</span>
-                                      <button 
-                                        onClick={() => handleDeleteAssignment(as.id)}
-                                        className="text-rose-500 hover:text-rose-700 transition-opacity"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </button>
+                                      <span className="font-semibold text-[10px] leading-tight break-all pr-2">{branch?.name || "Unknown"}</span>
+                                      {isAdmin && (
+                                        <button 
+                                          onClick={() => handleDeleteAssignment(as.id)}
+                                          className="text-rose-500 hover:text-rose-700 transition-opacity shrink-0"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      )}
                                     </div>
                                     <div className="flex items-center gap-1 text-[9px] text-slate-400">
                                       <Clock className="w-2.5 h-2.5" />
@@ -332,7 +394,7 @@ export function StaffRoster({ tenantId }: { tenantId: string }) {
                                         Capacity Warning
                                       </div>
                                     )}
-                                  </Badge>
+                                  </div>
                                 </div>
                               );
                             })
@@ -349,8 +411,10 @@ export function StaffRoster({ tenantId }: { tenantId: string }) {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {branches.map(branch => {
-          const totalStaffAssigned = assignments.filter(a => a.branchId === branch.id).length;
+        {branches
+          .filter(b => selectedBranchId === "all" || b.id === selectedBranchId)
+          .map(branch => {
+            const totalStaffAssigned = assignments.filter(a => a.branchId === branch.id).length;
           const isOverCapacityAnyDay = DAYS.some(d => {
             const count = assignments.filter(a => a.branchId === branch.id && a.dayOfWeek === d.value).length;
             return count > branch.maxCapacity;

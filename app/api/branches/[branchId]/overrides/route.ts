@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { branchOverrides, appointments } from "@/lib/db/schema";
+import { branchOverrides, appointments, branches } from "@/lib/db/schema";
 import { eq, and, gte, lte, or } from "drizzle-orm";
 
 export async function GET(
@@ -50,6 +50,18 @@ export async function POST(
   }
 
   try {
+    // Verify branch belongs to tenant
+    const targetBranch = await db.query.branches.findFirst({
+      where: and(
+        eq(branches.id, branchId),
+        eq(branches.tenantId, orgId)
+      ),
+    });
+
+    if (!targetBranch) {
+      return new NextResponse("Branch not found or unauthorized", { status: 404 });
+    }
+
     const [override] = await db.insert(branchOverrides).values({
       tenantId: orgId,
       branchId,

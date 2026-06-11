@@ -153,7 +153,7 @@ export function ServicesTab({ tenantId }: { tenantId: string }) {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[450px] rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[450px] rounded-2xl border-none shadow-2xl p-0 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="p-8 pb-0">
             <DialogTitle className="text-2xl font-playfair font-semibold text-obsidian">
               {editingService ? "Edit Service" : "Add New Service"}

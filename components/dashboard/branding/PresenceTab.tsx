@@ -15,6 +15,7 @@ interface PresenceTabProps {
     subdomain: string | null;
     seoTitle: string | null;
     seoDescription: string | null;
+    tenantId: string;
   };
 }
 
@@ -27,7 +28,7 @@ export function PresenceTab({ clinic }: PresenceTabProps) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/clinics/${clinic.id}/branding`, {
+      const response = await fetch(`/api/clinics/${clinic.tenantId}/branding`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -81,6 +82,11 @@ export function PresenceTab({ clinic }: PresenceTabProps) {
             <p className="text-xs text-muted-foreground">
               Your patient booking page will be accessible at this address.
             </p>
+            {subdomain && subdomain.length < 3 && (
+              <p className="text-xs text-rose-500 font-medium mt-1">
+                Subdomain must be at least 3 characters.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -111,7 +117,7 @@ export function PresenceTab({ clinic }: PresenceTabProps) {
           </div>
         </CardContent>
         <CardFooter className="border-t pt-6">
-          <Button onClick={handleSave} disabled={isSaving}>
+          <Button onClick={handleSave} disabled={isSaving || (!!subdomain && subdomain.length < 3)}>
             {isSaving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (

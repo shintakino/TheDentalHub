@@ -1,6 +1,4 @@
-import { db } from "@/lib/db";
-import { clinics } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { getCachedClinicBySubdomain } from "@/lib/db/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -12,9 +10,7 @@ export default async function BookingLayout({
   params: Promise<{ tenantSlug: string }>;
 }) {
   const { tenantSlug } = await params;
-  const clinic = await db.query.clinics.findFirst({
-    where: eq(clinics.subdomain, tenantSlug),
-  });
+  const clinic = await getCachedClinicBySubdomain(tenantSlug);
 
   if (!clinic) {
     notFound();
