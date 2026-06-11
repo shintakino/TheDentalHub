@@ -25,6 +25,7 @@ interface DiscoveryMapProps {
   branches: MarketplaceResult[];
   onSearch: (lat: number, lng: number) => void;
   center?: [number, number];
+  searchTrigger?: number;
 }
 
 function MapEvents({ onSearch }: { onSearch: (lat: number, lng: number) => void }) {
@@ -37,25 +38,52 @@ function MapEvents({ onSearch }: { onSearch: (lat: number, lng: number) => void 
   return null;
 }
 
-function MapUpdater({ branches }: { branches: MarketplaceResult[] }) {
+import { useRef } from "react";
+
+function MapUpdater({ branches, searchTrigger = 0 }: { branches: MarketplaceResult[]; searchTrigger?: number }) {
   const map = useMap();
+  const lastTriggerRef = useRef<number>(-1);
 
   useEffect(() => {
-    if (branches.length > 0) {
+    // Only fit bounds if searchTrigger has incremented, indicating an explicit search action
+    if (searchTrigger > lastTriggerRef.current && branches.length > 0) {
       const validBranches = branches.filter(b => b.latitude && b.longitude);
       if (validBranches.length > 0) {
         const bounds = L.latLngBounds(
           validBranches.map((b) => [parseFloat(b.latitude!), parseFloat(b.longitude!)] as [number, number])
         );
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+        lastTriggerRef.current = searchTrigger;
       }
     }
-  }, [branches, map]);
+  }, [branches, map, searchTrigger]);
 
   return null;
 }
 
-export default function DiscoveryMap({ branches, onSearch, center = [7.0084, 125.0139] }: DiscoveryMapProps) {
+function MapCenterUpdater({ center }: { center: [number, number] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (center) {
+      const currentCenter = map.getCenter();
+      const targetLatLng = L.latLng(center[0], center[1]);
+      const dist = currentCenter.distanceTo(targetLatLng);
+      if (dist > 50) { // threshold in meters to prevent loops on user pan
+        map.setView(targetLatLng, 12);
+      }
+    }
+  }, [center, map]);
+
+  return null;
+}
+
+export default function DiscoveryMap({ 
+  branches, 
+  onSearch, 
+  center = [7.0084, 125.0139],
+  searchTrigger = 0
+}: DiscoveryMapProps) {
   return (
     <div className="w-full h-full relative z-0">
       <MapContainer 
@@ -93,7 +121,8 @@ export default function DiscoveryMap({ branches, onSearch, center = [7.0084, 125
         })}
         
         <MapEvents onSearch={onSearch} />
-        <MapUpdater branches={branches} />
+        <MapUpdater branches={branches} searchTrigger={searchTrigger} />
+        <MapCenterUpdater center={center} />
       </MapContainer>
       
       {/* Custom Leaflet overrides in style tag because Leaflet's z-index is problematic */}

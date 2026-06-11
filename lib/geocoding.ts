@@ -1,5 +1,9 @@
-export async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+export async function geocodeAddress(
+  address: string,
+  options?: { useFallback?: boolean }
+): Promise<{ lat: number; lng: number } | null> {
   if (!address) return null;
+  const useFallback = options?.useFallback ?? true;
   
   try {
     // Attempt to use Nominatim (OpenStreetMap) - No API key required for low volume
@@ -29,6 +33,11 @@ export async function geocodeAddress(address: string): Promise<{ lat: number; ln
       };
     }
     
+    if (!useFallback) {
+      console.warn(`Geocoding returned no results for: ${address}. No fallback requested.`);
+      return null;
+    }
+    
     // Fallback/Mock for development if Nominatim fails or returns nothing
     console.warn(`Geocoding returned no results for: ${address}. Using fallback.`);
     return {
@@ -37,6 +46,9 @@ export async function geocodeAddress(address: string): Promise<{ lat: number; ln
     };
   } catch (error) {
     console.error("Geocoding error:", error);
+    if (!useFallback) {
+      return null;
+    }
     return {
       lat: 7.0084,
       lng: 125.0139

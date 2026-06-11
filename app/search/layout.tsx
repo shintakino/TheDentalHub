@@ -13,13 +13,13 @@ export default async function DiscoveryLayout({
 
   if (userId) {
     return (
-      <div className="relative flex min-h-screen w-full bg-background">
+      <div className="relative flex h-screen w-full bg-background overflow-hidden">
         <Sidebar />
-        <div className="flex flex-col flex-1 w-full md:pl-[304px]">
-          <div className="pt-6">
+        <div className="flex flex-col flex-1 w-full md:pl-[304px] h-full overflow-hidden">
+          <div className="pt-6 flex-shrink-0">
             <Navbar />
           </div>
-          <main className="flex-1 flex flex-col mt-2">
+          <main className="flex-1 flex flex-col mt-2 overflow-hidden">
             {children}
           </main>
         </div>
@@ -28,8 +28,8 @@ export default async function DiscoveryLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="h-16 border-b flex items-center px-6 bg-card/80 backdrop-blur-md sticky top-0 z-[1000]">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <header className="h-16 border-b flex items-center px-6 bg-card/80 backdrop-blur-md sticky top-0 z-[1000] flex-shrink-0">
         <div className="w-full flex items-center justify-between max-w-[1400px] mx-auto">
           <Link href="/" className="flex items-center gap-2">
             <span className="font-serif text-2xl font-bold tracking-tight text-primary">
@@ -51,7 +51,7 @@ export default async function DiscoveryLayout({
           </div>
         </div>
       </header>
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col overflow-hidden">
         {children}
       </main>
     </div>

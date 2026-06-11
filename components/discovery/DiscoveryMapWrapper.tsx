@@ -15,8 +15,9 @@ interface DiscoveryMapWrapperProps {
   branches: MarketplaceResult[];
   onSearch: (lat: number, lng: number) => void;
   center?: [number, number];
+  searchTrigger?: number;
 }
 
-export default function DiscoveryMapWrapper({ branches, onSearch, center }: DiscoveryMapWrapperProps) {
-  return <DiscoveryMap branches={branches} onSearch={onSearch} center={center} />;
+export default function DiscoveryMapWrapper({ branches, onSearch, center, searchTrigger }: DiscoveryMapWrapperProps) {
+  return <DiscoveryMap branches={branches} onSearch={onSearch} center={center} searchTrigger={searchTrigger} />;
 }
