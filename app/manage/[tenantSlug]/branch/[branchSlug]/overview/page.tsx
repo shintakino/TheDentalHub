@@ -9,6 +9,7 @@ import { LowStockWidget, KPISnapshot, QuickActions, ActivityFeed, Activity, Acti
 import { startOfDay, endOfDay } from "date-fns";
 import { getBranchBySlug } from "@/lib/db/branch";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 
 export default async function BranchOverviewPage({
   params,
@@ -17,6 +18,8 @@ export default async function BranchOverviewPage({
 }) {
   const { tenantSlug, branchSlug } = await params;
   const tenantId = await getTenantId();
+  const { orgRole } = await auth();
+  const isAdmin = orgRole === "org:admin";
 
   const branch = await getBranchBySlug(tenantSlug, branchSlug);
   if (!branch) {
@@ -140,7 +143,7 @@ export default async function BranchOverviewPage({
         <WaitlistManager branchId={branchId} />
       </div>
 
-      <QuickActions tenantSlug={tenantSlug} />
+      <QuickActions tenantSlug={tenantSlug} isAdmin={isAdmin} />
       
       {lowStockItems.length > 0 && (
         <LowStockWidget items={lowStockItems} tenantSlug={tenantSlug} />
