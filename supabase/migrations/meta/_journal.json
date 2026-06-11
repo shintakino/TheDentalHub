@@ -15,6 +15,20 @@
       "when": 1778081700008,
       "tag": "0001_tough_captain_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778253506717,
+      "tag": "0002_simple_stature",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778255240910,
+      "tag": "0003_faulty_manta",
+      "breakpoints": true
     }
   ]
 }

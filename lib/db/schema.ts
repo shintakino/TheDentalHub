@@ -35,6 +35,7 @@ export const branches = pgTable("branches", {
   id: uuid("id").defaultRandom().primaryKey(),
   tenantId: text("tenant_id").notNull().references(() => clinics.tenantId, { onDelete: 'cascade' }),
   name: text("name").notNull(),
+  slug: text("slug").notNull(),
   address: text("address"),
   timezone: text("timezone").default("UTC").notNull(),
   operatingHours: jsonb("operating_hours").$type<{ day: number; open: string; close: string; active: boolean }[]>().default([]).notNull(),
@@ -47,7 +48,9 @@ export const branches = pgTable("branches", {
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  unq: unique().on(t.tenantId, t.slug),
+}));
 
 export const services = pgTable("services", {
   id: uuid("id").defaultRandom().primaryKey(),
